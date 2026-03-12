@@ -1,0 +1,2567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HOLLOW CREEK — A Horror Story</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Special+Elite&family=Crimson+Text:ital,wght@0,400;0,600;1,400&family=Share+Tech+Mono&display=swap');
+
+  :root {
+    --blood: #8b0000;
+    --deep-red: #4a0000;
+    --ash: #c8c0b8;
+    --fog: #a09890;
+    --ink: #0a0806;
+    --paper: #1a1410;
+    --highlight: #d4a050;
+    --ghost: rgba(200,192,184,0.07);
+    --flicker: #f0e8d0;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--ink);
+    color: var(--ash);
+    font-family: 'Crimson Text', Georgia, serif;
+    font-size: 18px;
+    line-height: 1.8;
+    min-height: 100vh;
+    overflow-x: hidden;
+    cursor: default;
+  }
+
+  /* Grain overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 9999;
+    opacity: 0.35;
+  }
+
+  /* SCREEN MANAGEMENT */
+  .screen { display: none; }
+  .screen.active { display: flex; }
+
+  /* ===== TITLE SCREEN ===== */
+  #title-screen {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    position: relative;
+    overflow: hidden;
+  }
+
+  #title-screen::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at 50% 60%, #1a0505 0%, #050302 70%);
+  }
+
+  .title-bg-text {
+    position: absolute;
+    font-family: 'Special Elite', serif;
+    font-size: clamp(80px, 20vw, 200px);
+    color: rgba(80,0,0,0.06);
+    letter-spacing: 0.3em;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    white-space: nowrap;
+    pointer-events: none;
+    animation: breathe 8s ease-in-out infinite;
+  }
+
+  @keyframes breathe {
+    0%, 100% { opacity: 0.5; transform: translate(-50%,-50%) scale(1); }
+    50% { opacity: 1; transform: translate(-50%,-50%) scale(1.02); }
+  }
+
+  .title-content {
+    position: relative;
+    z-index: 2;
+    text-align: center;
+    padding: 2rem;
+  }
+
+  .title-eyebrow {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.4em;
+    color: var(--blood);
+    text-transform: uppercase;
+    margin-bottom: 1rem;
+    animation: fadeInDown 1s ease 0.5s both;
+  }
+
+  h1.game-title {
+    font-family: 'Special Elite', serif;
+    font-size: clamp(48px, 10vw, 100px);
+    color: var(--flicker);
+    letter-spacing: 0.12em;
+    text-shadow: 0 0 40px rgba(139,0,0,0.6), 0 0 80px rgba(139,0,0,0.2);
+    animation: titleFlicker 6s ease-in-out 1s both, fadeInDown 1s ease 0.8s both;
+    line-height: 1;
+    margin-bottom: 0.3em;
+  }
+
+  @keyframes titleFlicker {
+    0%, 95%, 100% { opacity: 1; }
+    96% { opacity: 0.4; }
+    97% { opacity: 1; }
+    98% { opacity: 0.2; }
+    99% { opacity: 0.9; }
+  }
+
+  .title-sub {
+    font-family: 'Crimson Text', serif;
+    font-size: 1.3rem;
+    font-style: italic;
+    color: var(--fog);
+    letter-spacing: 0.1em;
+    margin-bottom: 3rem;
+    animation: fadeInDown 1s ease 1.1s both;
+  }
+
+  .title-divider {
+    width: 200px;
+    height: 1px;
+    background: linear-gradient(to right, transparent, var(--blood), transparent);
+    margin: 0 auto 2.5rem;
+    animation: fadeIn 1s ease 1.4s both;
+  }
+
+  .btn {
+    font-family: 'Special Elite', serif;
+    font-size: 1rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    background: transparent;
+    border: 1px solid var(--blood);
+    color: var(--ash);
+    padding: 0.8em 2.5em;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--blood);
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+  }
+
+  .btn:hover::before { transform: translateX(0); }
+  .btn span { position: relative; z-index: 1; }
+
+  .btn:hover {
+    color: var(--flicker);
+    box-shadow: 0 0 20px rgba(139,0,0,0.4);
+  }
+
+  .title-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    align-items: center;
+    animation: fadeInUp 1s ease 1.7s both;
+  }
+
+  .title-warning {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    color: rgba(160,152,144,0.4);
+    margin-top: 3rem;
+    animation: fadeIn 1s ease 2s both;
+  }
+
+  /* ===== SETTINGS SCREEN ===== */
+  #settings-screen {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 2rem;
+    background: radial-gradient(ellipse at center, #0e0a08 0%, #050302 100%);
+  }
+
+  .settings-panel {
+    width: 100%;
+    max-width: 550px;
+    border: 1px solid rgba(139,0,0,0.3);
+    padding: 3rem;
+    background: rgba(10,8,6,0.9);
+    position: relative;
+  }
+
+  .settings-panel::before {
+    content: '';
+    position: absolute;
+    top: -1px; left: 20px; right: 20px;
+    height: 1px;
+    background: linear-gradient(to right, transparent, var(--blood), transparent);
+  }
+
+  .settings-title {
+    font-family: 'Special Elite', serif;
+    font-size: 1.8rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--ash);
+    margin-bottom: 2.5rem;
+    text-align: center;
+  }
+
+  .setting-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 0;
+    border-bottom: 1px solid rgba(160,152,144,0.08);
+  }
+
+  .setting-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.8rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--fog);
+  }
+
+  .setting-desc {
+    font-size: 0.75rem;
+    font-style: italic;
+    color: rgba(160,152,144,0.4);
+    margin-top: 0.2rem;
+  }
+
+  .toggle {
+    width: 48px;
+    height: 24px;
+    background: #2a2020;
+    border: 1px solid rgba(139,0,0,0.4);
+    border-radius: 12px;
+    cursor: pointer;
+    position: relative;
+    transition: background 0.3s;
+  }
+
+  .toggle.on { background: var(--deep-red); }
+
+  .toggle::after {
+    content: '';
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--ash);
+    top: 2px;
+    left: 2px;
+    transition: transform 0.3s;
+  }
+
+  .toggle.on::after { transform: translateX(24px); }
+
+  .slider-wrap { display: flex; align-items: center; gap: 1rem; }
+
+  input[type=range] {
+    -webkit-appearance: none;
+    width: 120px;
+    height: 2px;
+    background: #3a2a2a;
+    outline: none;
+  }
+
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--blood);
+    cursor: pointer;
+  }
+
+  .slider-val {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--fog);
+    width: 30px;
+    text-align: right;
+  }
+
+  select.setting-select {
+    background: #1a1410;
+    border: 1px solid rgba(139,0,0,0.3);
+    color: var(--ash);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.75rem;
+    padding: 0.3em 0.6em;
+    cursor: pointer;
+    outline: none;
+  }
+
+  /* ===== CHAPTERS SCREEN ===== */
+  #chapters-screen {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 2rem;
+    background: radial-gradient(ellipse at center, #0e0a08 0%, #050302 100%);
+  }
+
+  .chapters-list {
+    width: 100%;
+    max-width: 600px;
+  }
+
+  .chapters-header {
+    font-family: 'Special Elite', serif;
+    font-size: 1.8rem;
+    letter-spacing: 0.2em;
+    text-align: center;
+    margin-bottom: 3rem;
+    color: var(--ash);
+  }
+
+  .chapter-item {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    padding: 1.2rem 1.5rem;
+    margin-bottom: 0.5rem;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: all 0.3s;
+    position: relative;
+    background: rgba(10,8,6,0.5);
+  }
+
+  .chapter-item.unlocked:hover {
+    border-color: rgba(139,0,0,0.4);
+    background: rgba(139,0,0,0.05);
+  }
+
+  .chapter-item.locked { opacity: 0.35; cursor: not-allowed; }
+
+  .chapter-num {
+    font-family: 'Special Elite', serif;
+    font-size: 2.5rem;
+    color: rgba(139,0,0,0.4);
+    line-height: 1;
+    min-width: 50px;
+  }
+
+  .chapter-info h3 {
+    font-family: 'Special Elite', serif;
+    font-size: 1.1rem;
+    color: var(--ash);
+    letter-spacing: 0.05em;
+    margin-bottom: 0.2rem;
+  }
+
+  .chapter-info p {
+    font-size: 0.85rem;
+    font-style: italic;
+    color: var(--fog);
+  }
+
+  .chapter-badge {
+    margin-left: auto;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+    padding: 0.2em 0.6em;
+    border: 1px solid;
+  }
+
+  .chapter-badge.complete { border-color: var(--blood); color: var(--blood); }
+  .chapter-badge.locked-badge { border-color: rgba(160,152,144,0.2); color: rgba(160,152,144,0.3); }
+
+  /* ===== GAME SCREEN ===== */
+  #game-screen {
+    flex-direction: column;
+    min-height: 100vh;
+    background: #080604;
+    position: relative;
+  }
+
+  /* Vignette */
+  #game-screen::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.7) 100%);
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .game-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 2rem;
+    border-bottom: 1px solid rgba(139,0,0,0.15);
+    position: sticky;
+    top: 0;
+    background: rgba(8,6,4,0.95);
+    backdrop-filter: blur(4px);
+    z-index: 100;
+  }
+
+  .chapter-indicator {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.3em;
+    color: var(--blood);
+    text-transform: uppercase;
+  }
+
+  .game-title-small {
+    font-family: 'Special Elite', serif;
+    font-size: 1rem;
+    letter-spacing: 0.2em;
+    color: rgba(200,192,184,0.4);
+  }
+
+  .header-controls {
+    display: flex;
+    gap: 1rem;
+  }
+
+  .icon-btn {
+    background: none;
+    border: none;
+    color: var(--fog);
+    cursor: pointer;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.15em;
+    padding: 0.3em 0.6em;
+    border: 1px solid transparent;
+    transition: all 0.3s;
+    text-transform: uppercase;
+  }
+
+  .icon-btn:hover { border-color: rgba(139,0,0,0.3); color: var(--ash); }
+
+  /* Story area */
+  .story-container {
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 3rem 2rem 2rem;
+    position: relative;
+    z-index: 2;
+    min-height: calc(100vh - 60px);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .location-tag {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.35em;
+    color: var(--blood);
+    text-transform: uppercase;
+    margin-bottom: 2rem;
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+  }
+
+  .location-tag::before {
+    content: '';
+    display: block;
+    width: 30px;
+    height: 1px;
+    background: var(--blood);
+  }
+
+  .character-portrait {
+    float: right;
+    margin: 0 0 1.5rem 2rem;
+    text-align: center;
+    opacity: 0;
+    transition: opacity 0.8s;
+  }
+
+  .character-portrait.visible { opacity: 1; }
+
+  .portrait-art {
+    width: 90px;
+    height: 120px;
+    border: 1px solid rgba(139,0,0,0.3);
+    background: rgba(10,5,5,0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3rem;
+    margin-bottom: 0.4rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .portrait-art::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to bottom, transparent 60%, rgba(139,0,0,0.15));
+  }
+
+  .portrait-name {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.15em;
+    color: var(--fog);
+    text-transform: uppercase;
+  }
+
+  .story-text {
+    flex: 1;
+  }
+
+  .story-paragraph {
+    margin-bottom: 1.5rem;
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+    color: var(--ash);
+  }
+
+  .story-paragraph.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .story-paragraph.dialogue {
+    color: var(--flicker);
+    padding-left: 1.5rem;
+    border-left: 2px solid rgba(139,0,0,0.4);
+    font-style: italic;
+  }
+
+  .story-paragraph.thought {
+    color: var(--fog);
+    font-style: italic;
+  }
+
+  .story-paragraph.atmospheric {
+    color: rgba(160,152,144,0.6);
+    font-size: 0.9rem;
+    font-style: italic;
+    letter-spacing: 0.05em;
+  }
+
+  .story-paragraph em.red { color: var(--blood); font-style: normal; }
+  .story-paragraph em.highlight { color: var(--highlight); font-style: normal; }
+
+  /* Choices */
+  .choices-container {
+    margin-top: 3rem;
+    padding-top: 2rem;
+    border-top: 1px solid rgba(160,152,144,0.08);
+    opacity: 0;
+    transition: opacity 0.5s;
+  }
+
+  .choices-container.visible { opacity: 1; }
+
+  .choices-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.3em;
+    color: rgba(160,152,144,0.3);
+    text-transform: uppercase;
+    margin-bottom: 1rem;
+  }
+
+  .choice-btn {
+    display: block;
+    width: 100%;
+    text-align: left;
+    background: transparent;
+    border: 1px solid rgba(160,152,144,0.1);
+    color: var(--ash);
+    font-family: 'Crimson Text', serif;
+    font-size: 1rem;
+    padding: 1rem 1.5rem;
+    margin-bottom: 0.6rem;
+    cursor: pointer;
+    transition: all 0.3s;
+    position: relative;
+    overflow: hidden;
+    line-height: 1.5;
+  }
+
+  .choice-btn::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    background: var(--blood);
+    transform: scaleY(0);
+    transition: transform 0.3s;
+  }
+
+  .choice-btn:hover {
+    border-color: rgba(139,0,0,0.4);
+    background: rgba(139,0,0,0.04);
+    color: var(--flicker);
+    padding-left: 2rem;
+  }
+
+  .choice-btn:hover::before { transform: scaleY(1); }
+
+  .choice-key {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--blood);
+    margin-right: 0.8rem;
+  }
+
+  /* Stats bar */
+  .stats-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(8,6,4,0.95);
+    border-top: 1px solid rgba(139,0,0,0.15);
+    padding: 0.6rem 2rem;
+    display: flex;
+    gap: 2rem;
+    align-items: center;
+    z-index: 100;
+    backdrop-filter: blur(4px);
+  }
+
+  .stat-item {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+
+  .stat-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.2em;
+    color: rgba(160,152,144,0.4);
+    text-transform: uppercase;
+  }
+
+  .stat-bar-bg {
+    width: 80px;
+    height: 3px;
+    background: rgba(160,152,144,0.1);
+    position: relative;
+  }
+
+  .stat-bar-fill {
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    background: var(--blood);
+    transition: width 0.5s ease;
+  }
+
+  .stat-bar-fill.sanity { background: #4a6fa5; }
+  .stat-bar-fill.health { background: var(--blood); }
+
+  .stat-num {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--fog);
+    min-width: 28px;
+  }
+
+  .journal-entries {
+    margin-left: auto;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.15em;
+    color: rgba(160,152,144,0.3);
+  }
+
+  /* ===== JUMPSCARE OVERLAY ===== */
+  #jumpscare {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background: #000;
+  }
+
+  #jumpscare.active { display: flex; }
+
+  .jumpscare-face {
+    font-size: 20vw;
+    animation: scareAnim 0.4s ease-out;
+    filter: drop-shadow(0 0 40px red);
+  }
+
+  @keyframes scareAnim {
+    0% { transform: scale(0.1) rotate(-10deg); opacity: 0; }
+    70% { transform: scale(1.1) rotate(2deg); opacity: 1; }
+    100% { transform: scale(1); }
+  }
+
+  /* ===== JOURNAL/NOTES OVERLAY ===== */
+  #journal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 5000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0,0,0,0.85);
+    backdrop-filter: blur(4px);
+  }
+
+  #journal-overlay.active { display: flex; }
+
+  .journal-panel {
+    width: 90%;
+    max-width: 600px;
+    max-height: 80vh;
+    background: #0d0906;
+    border: 1px solid rgba(139,0,0,0.3);
+    padding: 2rem;
+    overflow-y: auto;
+    position: relative;
+  }
+
+  .journal-panel h2 {
+    font-family: 'Special Elite', serif;
+    font-size: 1.4rem;
+    letter-spacing: 0.2em;
+    color: var(--ash);
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.8rem;
+    border-bottom: 1px solid rgba(139,0,0,0.2);
+  }
+
+  .journal-entry {
+    padding: 0.8rem 0;
+    border-bottom: 1px solid rgba(160,152,144,0.06);
+    font-size: 0.9rem;
+    color: var(--fog);
+  }
+
+  .journal-entry .entry-title {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    color: var(--blood);
+    margin-bottom: 0.3rem;
+    text-transform: uppercase;
+  }
+
+  .close-overlay {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: none;
+    border: 1px solid rgba(139,0,0,0.3);
+    color: var(--fog);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    padding: 0.3em 0.7em;
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+  .close-overlay:hover { color: var(--ash); border-color: var(--blood); }
+
+  /* ===== TRANSITION / CHAPTER CARD ===== */
+  #chapter-transition {
+    position: fixed;
+    inset: 0;
+    z-index: 8000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background: #000;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  #chapter-transition.active { display: flex; }
+
+  .transition-chapter-num {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.75rem;
+    letter-spacing: 0.5em;
+    color: var(--blood);
+    animation: fadeInUp 0.8s ease 0.3s both;
+  }
+
+  .transition-chapter-title {
+    font-family: 'Special Elite', serif;
+    font-size: clamp(2rem, 6vw, 4rem);
+    color: var(--ash);
+    letter-spacing: 0.1em;
+    text-align: center;
+    animation: fadeInUp 0.8s ease 0.6s both;
+  }
+
+  .transition-chapter-quote {
+    font-family: 'Crimson Text', serif;
+    font-style: italic;
+    color: var(--fog);
+    font-size: 1rem;
+    animation: fadeInUp 0.8s ease 0.9s both;
+    max-width: 400px;
+    text-align: center;
+  }
+
+  /* ===== GAME OVER / END ===== */
+  #gameover-screen {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    background: #000;
+    text-align: center;
+    padding: 2rem;
+  }
+
+  .gameover-icon { font-size: 5rem; margin-bottom: 1.5rem; animation: fadeIn 1s ease 0.5s both; }
+
+  .gameover-title {
+    font-family: 'Special Elite', serif;
+    font-size: 3rem;
+    color: var(--blood);
+    letter-spacing: 0.2em;
+    margin-bottom: 1rem;
+    animation: fadeInDown 1s ease 0.8s both;
+  }
+
+  .gameover-text {
+    font-style: italic;
+    color: var(--fog);
+    max-width: 500px;
+    margin: 0 auto 3rem;
+    animation: fadeIn 1s ease 1.1s both;
+  }
+
+  /* ===== ANIMATIONS ===== */
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes fadeInDown {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .flicker-text {
+    animation: textFlicker 3s ease-in-out infinite;
+  }
+
+  @keyframes textFlicker {
+    0%, 90%, 100% { opacity: 1; }
+    91% { opacity: 0.6; }
+    92% { opacity: 1; }
+    93% { opacity: 0.3; }
+    94% { opacity: 1; }
+  }
+
+  /* Screen shake */
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    10%, 30%, 50%, 70%, 90% { transform: translateX(-4px) rotate(-0.5deg); }
+    20%, 40%, 60%, 80% { transform: translateX(4px) rotate(0.5deg); }
+  }
+
+  .shake { animation: shake 0.5s ease; }
+
+  /* Red flash */
+  #red-flash {
+    position: fixed;
+    inset: 0;
+    background: var(--blood);
+    pointer-events: none;
+    opacity: 0;
+    z-index: 9000;
+    transition: opacity 0.1s;
+  }
+
+  #red-flash.flash {
+    animation: flashAnim 0.4s ease;
+  }
+
+  @keyframes flashAnim {
+    0% { opacity: 0; }
+    20% { opacity: 0.5; }
+    100% { opacity: 0; }
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: #080604; }
+  ::-webkit-scrollbar-thumb { background: var(--deep-red); }
+
+  /* Responsive */
+  @media (max-width: 600px) {
+    .story-container { padding: 2rem 1.2rem; }
+    .character-portrait { display: none; }
+    .stats-bar { gap: 1rem; }
+    .stat-bar-bg { width: 50px; }
+  }
+
+  /* Ambient text effect */
+  .ambient-line {
+    position: fixed;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.6rem;
+    color: rgba(139,0,0,0.06);
+    letter-spacing: 0.2em;
+    pointer-events: none;
+    z-index: 0;
+    white-space: nowrap;
+  }
+
+  /* Continue prompt */
+  .continue-prompt {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.3em;
+    color: rgba(139,0,0,0.5);
+    text-align: center;
+    margin-top: 2rem;
+    animation: pulse 2s ease-in-out infinite;
+    cursor: pointer;
+    text-transform: uppercase;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 0.3; }
+    50% { opacity: 1; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Red flash effect -->
+<div id="red-flash"></div>
+
+<!-- Jumpscare Overlay -->
+<div id="jumpscare">
+  <div class="jumpscare-face" id="jumpscare-icon">👁</div>
+</div>
+
+<!-- Journal Overlay -->
+<div id="journal-overlay">
+  <div class="journal-panel">
+    <button class="close-overlay" onclick="closeJournal()">CLOSE ✕</button>
+    <h2>📓 Field Notes</h2>
+    <div id="journal-entries-list">
+      <div style="color:rgba(160,152,144,0.3); font-style:italic; font-size:0.85rem;">No entries yet.</div>
+    </div>
+  </div>
+</div>
+
+<!-- Chapter Transition -->
+<div id="chapter-transition">
+  <div class="transition-chapter-num" id="transition-num">CHAPTER I</div>
+  <div class="transition-chapter-title" id="transition-title">Loading...</div>
+  <div class="transition-chapter-quote" id="transition-quote">Loading...</div>
+</div>
+
+<!-- ===== TITLE SCREEN ===== -->
+<div id="title-screen" class="screen active">
+  <div class="title-bg-text">HOLLOW</div>
+  <div class="title-content">
+    <div class="title-eyebrow">A Horror Story</div>
+    <h1 class="game-title">HOLLOW<br>CREEK</h1>
+    <div class="title-sub">"Some towns swallow you whole."</div>
+    <div class="title-divider"></div>
+    <div class="title-buttons">
+      <button class="btn" onclick="showChapters()"><span>▶ &nbsp;New Game</span></button>
+      <button class="btn" onclick="showScreen('settings-screen')"><span>⚙ &nbsp;Settings</span></button>
+    </div>
+    <div class="title-warning">⚠ &nbsp;CONTAINS HORROR ELEMENTS · JUMP SCARES · DISTURBING THEMES · AUDIO</div>
+  </div>
+</div>
+
+<!-- ===== SETTINGS SCREEN ===== -->
+<div id="settings-screen" class="screen">
+  <div class="settings-panel">
+    <div class="settings-title">Settings</div>
+
+    <div class="setting-row">
+      <div>
+        <div class="setting-label">Master Volume</div>
+        <div class="setting-desc">All sound effects & ambience</div>
+      </div>
+      <div class="slider-wrap">
+        <input type="range" id="vol-master" min="0" max="100" value="70" oninput="updateSetting('vol-master', this.value)">
+        <div class="slider-val" id="val-vol-master">70</div>
+      </div>
+    </div>
+
+    <div class="setting-row">
+      <div>
+        <div class="setting-label">Jump Scares</div>
+        <div class="setting-desc">Visual & audio scares</div>
+      </div>
+      <div class="toggle on" id="toggle-jumpscares" onclick="toggleSetting('jumpscares')"></div>
+    </div>
+
+    <div class="setting-row">
+      <div>
+        <div class="setting-label">Screen Shake</div>
+        <div class="setting-desc">Shake effect during intense moments</div>
+      </div>
+      <div class="toggle on" id="toggle-screenshake" onclick="toggleSetting('screenshake')"></div>
+    </div>
+
+    <div class="setting-row">
+      <div>
+        <div class="setting-label">Text Speed</div>
+        <div class="setting-desc">How fast story text appears</div>
+      </div>
+      <select class="setting-select" id="sel-textspeed" onchange="settings.textSpeed = this.value">
+        <option value="fast">Fast</option>
+        <option value="normal" selected>Normal</option>
+        <option value="slow">Slow</option>
+      </select>
+    </div>
+
+    <div class="setting-row">
+      <div>
+        <div class="setting-label">Ambient Sound</div>
+        <div class="setting-desc">Background atmosphere</div>
+      </div>
+      <div class="toggle on" id="toggle-ambient" onclick="toggleSetting('ambient')"></div>
+    </div>
+
+    <div class="setting-row">
+      <div>
+        <div class="setting-label">Gore Level</div>
+        <div class="setting-desc">Written horror detail intensity</div>
+      </div>
+      <select class="setting-select" id="sel-gore" onchange="settings.gore = this.value">
+        <option value="mild">Mild</option>
+        <option value="normal" selected>Normal</option>
+        <option value="intense">Intense</option>
+      </select>
+    </div>
+
+    <div style="margin-top:2rem; text-align:center;">
+      <button class="btn" onclick="showScreen('title-screen')"><span>← Back</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== CHAPTERS SCREEN ===== -->
+<div id="chapters-screen" class="screen">
+  <div class="chapters-list">
+    <div class="chapters-header">Select Chapter</div>
+    <div id="chapters-list-items"></div>
+    <div style="margin-top:2rem; text-align:center;">
+      <button class="btn" onclick="showScreen('title-screen')"><span>← Back</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== GAME SCREEN ===== -->
+<div id="game-screen" class="screen">
+  <div class="game-header">
+    <div class="chapter-indicator" id="chapter-indicator">Chapter I</div>
+    <div class="game-title-small flicker-text">HOLLOW CREEK</div>
+    <div class="header-controls">
+      <button class="icon-btn" onclick="openJournal()">NOTES</button>
+      <button class="icon-btn" onclick="showScreen('settings-screen')">SETTINGS</button>
+      <button class="icon-btn" onclick="showScreen('title-screen')">MENU</button>
+    </div>
+  </div>
+
+  <div class="story-container">
+    <div class="location-tag" id="location-tag">Unknown Location</div>
+    <div id="character-portrait" class="character-portrait">
+      <div class="portrait-art" id="portrait-face"></div>
+      <div class="portrait-name" id="portrait-name"></div>
+    </div>
+    <div class="story-text" id="story-text"></div>
+    <div class="choices-container" id="choices-container">
+      <div class="choices-label">What do you do?</div>
+      <div id="choices-list"></div>
+    </div>
+    <div style="height: 80px;"></div>
+  </div>
+
+  <div class="stats-bar">
+    <div class="stat-item">
+      <div class="stat-label">Health</div>
+      <div class="stat-bar-bg"><div class="stat-bar-fill health" id="health-bar" style="width:100%"></div></div>
+      <div class="stat-num" id="health-num">100</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-label">Sanity</div>
+      <div class="stat-bar-bg"><div class="stat-bar-fill sanity" id="sanity-bar" style="width:100%"></div></div>
+      <div class="stat-num" id="sanity-num">100</div>
+    </div>
+    <div class="journal-entries" id="journal-count">0 notes collected</div>
+  </div>
+</div>
+
+<!-- ===== GAME OVER SCREEN ===== -->
+<div id="gameover-screen" class="screen">
+  <div class="gameover-icon" id="gameover-icon">💀</div>
+  <div class="gameover-title" id="gameover-title">YOU DIED</div>
+  <p class="gameover-text" id="gameover-text">The darkness claimed you.</p>
+  <div style="display:flex; gap:1rem; justify-content:center; margin-top:1rem;">
+    <button class="btn" id="retry-btn" onclick="retryChapter()"><span>↺ &nbsp;Retry</span></button>
+    <button class="btn" onclick="showScreen('title-screen')"><span>⌂ &nbsp;Main Menu</span></button>
+  </div>
+</div>
+
+<script>
+// ===================================================================
+// AUDIO ENGINE (Web Audio API)
+// ===================================================================
+let audioCtx = null;
+let ambientNode = null;
+let ambientGain = null;
+
+function getAudioCtx() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return audioCtx;
+}
+
+function playTone(freq, type, duration, vol = 0.3) {
+  if (!settings.masterVolume) return;
+  try {
+    const ctx = getAudioCtx();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(freq * 0.5, ctx.currentTime + duration);
+    gain.gain.setValueAtTime(vol * (settings.masterVolume / 100), ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + duration);
+  } catch(e) {}
+}
+
+function playJumpscareSFX() {
+  if (!settings.masterVolume) return;
+  try {
+    const ctx = getAudioCtx();
+    // Loud distorted screech
+    for (let i = 0; i < 3; i++) {
+      setTimeout(() => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        const dist = ctx.createWaveShaper();
+        const curve = new Float32Array(256);
+        for (let j = 0; j < 256; j++) {
+          const x = (j * 2) / 256 - 1;
+          curve[j] = (Math.PI + 400) * x / (Math.PI + 400 * Math.abs(x));
+        }
+        dist.curve = curve;
+        osc.connect(dist);
+        dist.connect(gain);
+        gain.connect(ctx.destination);
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(800 + Math.random()*400, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(200, ctx.currentTime + 0.3);
+        gain.gain.setValueAtTime(0.8 * (settings.masterVolume / 100), ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
+        osc.start(ctx.currentTime);
+        osc.stop(ctx.currentTime + 0.4);
+      }, i * 80);
+    }
+  } catch(e) {}
+}
+
+function playHeartbeat() {
+  if (!settings.masterVolume) return;
+  try {
+    const ctx = getAudioCtx();
+    [0, 0.15].forEach(delay => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(60, ctx.currentTime + delay);
+      gain.gain.setValueAtTime(0.5 * (settings.masterVolume / 100), ctx.currentTime + delay);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + 0.2);
+      osc.start(ctx.currentTime + delay);
+      osc.stop(ctx.currentTime + delay + 0.25);
+    });
+  } catch(e) {}
+}
+
+function playCreak() {
+  if (!settings.masterVolume) return;
+  try {
+    const ctx = getAudioCtx();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(400, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(100, ctx.currentTime + 0.8);
+    gain.gain.setValueAtTime(0.2 * (settings.masterVolume / 100), ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.8);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.9);
+  } catch(e) {}
+}
+
+function startAmbient() {
+  if (!settings.ambient || !settings.masterVolume) return;
+  try {
+    stopAmbient();
+    const ctx = getAudioCtx();
+    ambientGain = ctx.createGain();
+    ambientGain.gain.setValueAtTime(0.08 * (settings.masterVolume / 100), ctx.currentTime);
+
+    // Low drone
+    const drone = ctx.createOscillator();
+    drone.type = 'sine';
+    drone.frequency.setValueAtTime(40, ctx.currentTime);
+    drone.connect(ambientGain);
+
+    // Wind noise
+    const bufferSize = 4096;
+    const noise = ctx.createScriptProcessor(bufferSize, 1, 1);
+    noise.onaudioprocess = (e) => {
+      const out = e.outputBuffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) out[i] = Math.random() * 2 - 1;
+    };
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.frequency.setValueAtTime(300, ctx.currentTime);
+    filter.Q.setValueAtTime(0.5, ctx.currentTime);
+    noise.connect(filter);
+    filter.connect(ambientGain);
+
+    ambientGain.connect(ctx.destination);
+    drone.start();
+    ambientNode = { drone, noise, filter };
+  } catch(e) {}
+}
+
+function stopAmbient() {
+  try {
+    if (ambientNode) {
+      ambientNode.drone.stop();
+      ambientNode.noise.disconnect();
+      ambientNode = null;
+    }
+    if (ambientGain) {
+      ambientGain.disconnect();
+      ambientGain = null;
+    }
+  } catch(e) {}
+}
+
+// ===================================================================
+// SETTINGS
+// ===================================================================
+const settings = {
+  masterVolume: 70,
+  jumpscares: true,
+  screenshake: true,
+  textSpeed: 'normal',
+  ambient: true,
+  gore: 'normal'
+};
+
+function updateSetting(id, val) {
+  document.getElementById('val-' + id).textContent = val;
+  if (id === 'vol-master') settings.masterVolume = parseInt(val);
+}
+
+function toggleSetting(key) {
+  settings[key] = !settings[key];
+  document.getElementById('toggle-' + key).classList.toggle('on', settings[key]);
+}
+
+// ===================================================================
+// GAME STATE
+// ===================================================================
+let gameState = {
+  chapter: 0,
+  scene: 0,
+  health: 100,
+  sanity: 100,
+  inventory: [],
+  journal: [],
+  choices: {},
+  currentChapterData: null,
+};
+
+let currentRetryChapter = 0;
+
+// ===================================================================
+// CHARACTERS
+// ===================================================================
+const CHARACTERS = {
+  mara: { name: 'MARA COLE', icon: '👩', color: '#a08060' },
+  elias: { name: 'ELIAS FENN', icon: '👨', color: '#607090' },
+  hazel: { name: 'HAZEL CROW', icon: '👵', color: '#806060' },
+  deputy: { name: 'DEP. BANKS', icon: '🤠', color: '#707070' },
+  thomas: { name: 'THOMAS COLE', icon: '👦', color: '#a06060' },
+  stranger: { name: 'THE STRANGER', icon: '🕵', color: '#404040' },
+  entity: { name: '???', icon: '👁', color: '#600000' },
+};
+
+// ===================================================================
+// STORY DATA — 5 Chapters
+// ===================================================================
+const CHAPTERS_DATA = [
+  // ─── CHAPTER 1: ARRIVAL ───────────────────────────────────────
+  {
+    id: 0,
+    title: "The Road In",
+    quote: "\"She drove until the GPS died. That should have been the sign.\"",
+    location: "HOLLOW CREEK — OUTSKIRTS",
+    unlocked: true,
+    scenes: [
+      {
+        id: 'ch1_s1',
+        character: 'mara',
+        paragraphs: [
+          { type: 'atmospheric', text: 'The pine trees close around the road like a throat swallowing something it shouldn\'t.' },
+          { type: 'normal', text: 'You are <em class="highlight">Mara Cole</em>, 34, journalist. You\'ve driven six hours to reach Hollow Creek, a town that hasn\'t appeared on any map printed after 1987. Your brother Thomas stopped calling three weeks ago. His last text: <em class="red">found something incredible. come alone.</em>' },
+          { type: 'normal', text: 'The radio died an hour ago. Your phone shows no signal. The only sign of civilization is a hand-painted board nailed to a pine tree:' },
+          { type: 'dialogue', text: 'HOLLOW CREEK — POP. 312 — WE ARE WATCHED OVER' },
+          { type: 'thought', text: '"We are watched over." You\'ve photographed that phrase before — spray-painted under a bridge in Baltimore. In permanent marker on a gas station bathroom wall in Ohio. You thought it was a cult thing. Now you\'re not sure what you thought.' },
+        ],
+        choices: [
+          { text: 'Drive into town and find the sheriff\'s office', next: 'ch1_s2', sanity: 0, health: 0 },
+          { text: 'Stop and examine the sign more closely', next: 'ch1_s2b', sanity: -5, health: 0, journal: { title: 'THE SIGN', text: 'Hand-painted. Pine sap bled into the letters — it was nailed up recently. The underside of the board had something scratched into it: "THEY HEAR YOUR NAME." ' } },
+        ]
+      },
+      {
+        id: 'ch1_s2',
+        character: 'deputy',
+        location: "HOLLOW CREEK — MAIN STREET",
+        paragraphs: [
+          { type: 'atmospheric', text: 'The town is wrong in a way you can\'t immediately quantify. The geometry is off — buildings seem too close, the street too narrow, like a photograph of a town rather than a town itself.' },
+          { type: 'normal', text: 'The sheriff\'s office is a cinder-block building with a hand-lettered sign. Inside, a deputy sits behind a metal desk, head bent over paperwork. He doesn\'t look up when you enter.' },
+          { type: 'dialogue', text: '"Help you?" His voice is flat. Careful, like a man choosing each word from a very small pile.' },
+          { type: 'normal', text: 'You ask about Thomas Cole. The deputy\'s pen stops moving. The silence lasts exactly three seconds too long.' },
+          { type: 'dialogue', text: '"Your brother came through. Stayed at Hazel\'s place on Miller Road. Left about a week and a half ago, far as I know." He resumes writing. "Anything else?"' },
+          { type: 'thought', text: 'Thomas texted you four days after the deputy\'s supposed departure date. Either the deputy is wrong, or Thomas was still here. Or someone else was texting from his phone.' },
+        ],
+        choices: [
+          { text: 'Ask why no one reported Thomas missing', next: 'ch1_s3', sanity: 0, health: 0 },
+          { text: 'Say nothing and head to Hazel\'s on Miller Road', next: 'ch1_s4', sanity: 0, health: 0 },
+          { text: 'Accuse the deputy of lying', next: 'ch1_s3b', sanity: 0, health: -5 },
+        ]
+      },
+      {
+        id: 'ch1_s2b',
+        character: null,
+        paragraphs: [
+          { type: 'normal', text: 'You get out of the car. Up close, the sign smells of pine and something underneath — iron, faintly. You turn it over.' },
+          { type: 'atmospheric', text: 'Scratched into the raw wood with what looks like a fingernail: <em class="red">THEY HEAR YOUR NAME.</em>' },
+          { type: 'normal', text: 'The forest is silent. No birds. No insects. Just the low, almost subsonic hum you\'ve been half-aware of since the radio died.' },
+          { type: 'thought', text: 'Something watches you from the tree line. You can\'t see it. You can\'t hear it. But the hair on your arms rises in the ancient, reliable language of prey.' },
+        ],
+        choices: [
+          { text: 'Get back in the car and drive to town', next: 'ch1_s2', sanity: -10, health: 0 },
+        ]
+      },
+      {
+        id: 'ch1_s3',
+        character: 'deputy',
+        paragraphs: [
+          { type: 'normal', text: 'The deputy finally looks up. His eyes are the color of old dishwater. He studies you with the flat assessment of an accountant.' },
+          { type: 'dialogue', text: '"Missing?" He says the word like it\'s foreign. "He wasn\'t missing. He was a visitor. Visitors leave." A pause. "You\'ll leave too."' },
+          { type: 'normal', text: 'Not a threat. A fact. You\'re not sure which is worse.' },
+          { type: 'dialogue', text: '"Hazel Crow on Miller Road. She rents rooms." He writes an address on a slip of paper without looking, like he\'s written it a hundred times. "Take the east road. Don\'t stop if something\'s on the west road."' },
+          { type: 'thought', text: '"Don\'t stop if something\'s on the west road." You wait for him to explain. He doesn\'t. He goes back to his paperwork as if you\'ve already left.' },
+        ],
+        choices: [
+          { text: 'Drive to Hazel\'s, east road', next: 'ch1_s4', sanity: 0, health: 0 },
+          { text: 'Take the west road out of spite and curiosity', next: 'ch1_s3c', sanity: -15, health: -10, jumpscare: { icon: '👁', delay: 1200 } },
+        ]
+      },
+      {
+        id: 'ch1_s3c',
+        character: null,
+        paragraphs: [
+          { type: 'atmospheric', text: 'The west road is unpaved. The trees lean inward here, their branches intertwined overhead like fingers.' },
+          { type: 'normal', text: 'You round a bend and your headlights catch something on the road.' },
+          { type: 'normal', text: 'A figure. Standing perfectly still. <em class="red">Facing away from you.</em>' },
+          { type: 'normal', text: 'Your foot goes to the brake on pure reflex.' },
+          { type: 'atmospheric', text: 'It turns around.' },
+          { type: 'dialogue', text: '"MARA."' },
+          { type: 'normal', text: 'It knows your name. You never told the deputy your name. You never told anyone in this town anything.' },
+        ],
+        choices: [
+          { text: 'FLOOR IT — drive through, don\'t look', next: 'ch1_s4', sanity: -20, health: -5 },
+        ]
+      },
+      {
+        id: 'ch1_s3b',
+        character: 'deputy',
+        paragraphs: [
+          { type: 'normal', text: 'The deputy rises slowly from his chair. He\'s taller than you realized. He places both palms on the desk and leans forward.' },
+          { type: 'dialogue', text: '"I\'d choose my next words carefully, miss. This is a quiet town. We like quiet." His voice hasn\'t changed pitch. That\'s what makes it frightening.' },
+          { type: 'normal', text: 'You feel it then — a pressure behind your eyes, like the onset of a migraine. The fluorescent light above flickers once.' },
+          { type: 'thought', text: 'Back down. Something in this room doesn\'t want you to push. Something older than the deputy, older than the building, presses against the inside of your skull.' },
+        ],
+        choices: [
+          { text: 'Apologize and ask about Hazel Crow', next: 'ch1_s3', sanity: -5, health: 0 },
+        ]
+      },
+      {
+        id: 'ch1_s4',
+        character: 'hazel',
+        location: "MILLER ROAD — HAZEL'S BOARDING HOUSE",
+        paragraphs: [
+          { type: 'atmospheric', text: 'The boarding house is old enough to have opinions. It settles and groans around you as Hazel Crow leads you to the room Thomas stayed in. She is small, bird-boned, with eyes that have seen too much and decided not to be surprised anymore.' },
+          { type: 'normal', text: '"He was a good boarder," she says, unlocking the room with a key on a rabbit\'s foot. "Quiet. Polite. Left his towels neat." She hesitates at the door. "He asked about the mill."' },
+          { type: 'thought', text: 'The old Harker Mill. You read about it during your research — shut down 1974 after three workers disappeared. The town voted to seal it. You\'d assumed that meant demolish. Apparently not.' },
+          { type: 'normal', text: 'Inside the room, everything is in its place. Too much in its place. Thomas is chaos by nature — unmade beds, clothes on chairs. This room is <em class="red">staged.</em> Deliberately, carefully arranged by someone who\'d never met your brother.' },
+          { type: 'dialogue', text: '"The mill is off limits," Hazel says softly, from the doorway. "It\'s always been off limits. But something about your brother\'s eyes when he said the word..." She trails off. "He had the Hollow look. Most people who get it don\'t come back through town. They just... stop."' },
+        ],
+        choices: [
+          { text: 'Search the room carefully for anything Thomas left', next: 'ch1_s5', journal: { title: 'THE STAGED ROOM', text: 'Thomas didn\'t leave. Someone arranged this room to look like he did. The order is wrong. He\'s still here — or he was.' } },
+          { text: 'Ask Hazel about "the Hollow look"', next: 'ch1_s5b', sanity: -5 },
+          { text: 'Ask Hazel to tell you exactly when Thomas left', next: 'ch1_s5', health: 0 },
+        ]
+      },
+      {
+        id: 'ch1_s5',
+        character: null,
+        location: "MILLER ROAD — ROOM 4",
+        paragraphs: [
+          { type: 'normal', text: 'Under the mattress, pushed to the far corner so it wouldn\'t be found in a casual sweep: a small notebook. Thomas\'s handwriting — but erratic, pressed hard into the page, sometimes tearing through.' },
+          { type: 'dialogue', text: '"Day 6. I found the entrance. It wasn\'t sealed like they said. The door\'s been opened recently — the rust is broken on the hinges on the INSIDE. Something opened it from inside."' },
+          { type: 'dialogue', text: '"Day 9. I\'ve seen it twice now. It doesn\'t move like anything that grew here. It moves like something that ARRIVED here. It moved like it learned to walk from watching us and hasn\'t quite mastered the weight distribution."' },
+          { type: 'dialogue', text: '"Day 11. It said my name. I need to know if it knows YOUR name too. Mara, if you\'re reading this — it already knows. It knew before I told it. DO NOT SAY YOUR NAME OUT LOUD IN THIS TOWN."' },
+          { type: 'atmospheric', text: 'The notebook ends there. You realize, with a cold slide of understanding, that you told the deputy your name. You said it plainly. In this town. Out loud.' },
+        ],
+        choices: [
+          { text: 'Go to the Harker Mill tonight', next: 'ch1_end', sanity: -10 },
+          { text: 'Sleep first — plan in the morning', next: 'ch1_end', health: 5, sanity: 5 },
+        ]
+      },
+      {
+        id: 'ch1_s5b',
+        character: 'hazel',
+        paragraphs: [
+          { type: 'normal', text: 'Hazel is quiet for a long time. When she speaks, she keeps her eyes on the window.' },
+          { type: 'dialogue', text: '"The Hollow look. It\'s what we call it when someone\'s been... noticed. Something in the mill notices people sometimes. Notices them like a collector notices a piece for their cabinet." She turns. "Your brother had it. You might too, for all I know, though you just got here."' },
+          { type: 'dialogue', text: '"I\'ve lived here seventy-one years. I stopped trying to explain it. The mill was here before the town. Before the road. Before any of us. It was here and it had already been here for a long time."' },
+          { type: 'thought', text: 'Hazel is afraid. Under the composure is pure, managed terror. She\'s been afraid for a very long time and she\'s gotten very good at it.' },
+        ],
+        choices: [
+          { text: 'Search the room for Thomas\'s belongings', next: 'ch1_s5', sanity: 0 },
+        ]
+      },
+      {
+        id: 'ch1_end',
+        character: null,
+        paragraphs: [
+          { type: 'atmospheric', text: 'Somewhere in the walls of the boarding house, something shifts.' },
+          { type: 'normal', text: 'Not settling wood. Not the wind. A purposeful, patient <em class="red">shifting.</em>' },
+          { type: 'thought', text: 'You put your back to the wall and wait for dawn.' },
+          { type: 'atmospheric', text: 'Chapter I complete.' },
+        ],
+        choices: [
+          { text: 'Continue to Chapter II →', next: '__CHAPTER__', chapter: 1 },
+        ]
+      }
+    ]
+  },
+
+  // ─── CHAPTER 2: THE MILL ──────────────────────────────────────
+  {
+    id: 1,
+    title: "The Harker Mill",
+    quote: "\"The door was open. That was the worst part.\"",
+    location: "HARKER MILL — EXTERIOR",
+    unlocked: false,
+    scenes: [
+      {
+        id: 'ch2_s1',
+        character: null,
+        paragraphs: [
+          { type: 'atmospheric', text: 'The mill stands at the edge of town where the creek runs black. It is not beautiful and it was never meant to be — just concrete and iron and the memory of industry. But something has happened to it.' },
+          { type: 'normal', text: 'The building breathes. Not metaphorically. The walls expand fractionally and contract on a rhythm that is almost, but not quite, human.' },
+          { type: 'normal', text: 'The door is open. Thomas\'s notebook was right about the rust. You can see the break lines where the hinges forced, from the inside.' },
+          { type: 'thought', text: 'The smart thing is to leave. Drive until you have signal, call the police, file a missing persons report from safety. That is the logical sequence of actions.' },
+          { type: 'thought', text: 'Thomas is in there.' },
+        ],
+        choices: [
+          { text: 'Enter through the main door', next: 'ch2_s2', sanity: -5 },
+          { text: 'Circle the building first and find another way in', next: 'ch2_s2b', journal: { title: 'MILL EXTERIOR', text: 'Three windows, all barred. Loading dock sealed with new padlocks — but someone has scratched a symbol into the concrete beside it. A circle with lines radiating inward, not outward.' } },
+        ]
+      },
+      {
+        id: 'ch2_s2',
+        character: null,
+        location: "HARKER MILL — GROUND FLOOR",
+        paragraphs: [
+          { type: 'atmospheric', text: 'Your flashlight cuts a pale wound in the dark. The mill floor is an expanse of old machinery — belt-driven saws, conveyors, hoppers — all still, all filmed with a half-century of dust.' },
+          { type: 'normal', text: 'Except for a path. Down the center of the floor, something has walked repeatedly enough to disturb the dust into a clear track. Not human footprints. Something that drags its feet, or has more feet than expected, or something else entirely.' },
+          { type: 'normal', text: 'Your flashlight catches something on a wall. A note, scotch-taped at eye level. Thomas\'s handwriting.' },
+          { type: 'dialogue', text: '"If you\'re reading this you came in the front. It knows. Go to the upper floor now. DON\'T TURN AROUND when you hear it. WHATEVER YOU HEAR. Upper floor. Now."' },
+          { type: 'atmospheric', text: 'From directly behind you: a sound. Something between a footstep and a breath. Patient. Near.' },
+        ],
+        choices: [
+          { text: 'Run for the stairs — don\'t turn around', next: 'ch2_s3', sanity: -15, health: 0 },
+          { text: 'Turn around and face whatever it is', next: 'ch2_s2c', sanity: -25, health: -20, jumpscare: { icon: '🕷', delay: 800 } },
+        ]
+      },
+      {
+        id: 'ch2_s2b',
+        character: null,
+        location: "HARKER MILL — GROUND FLOOR (SIDE ENTRANCE)",
+        paragraphs: [
+          { type: 'normal', text: 'You find a coal chute on the north side — a rusted hatch in the foundation, padlock corroded open. You drop inside.' },
+          { type: 'atmospheric', text: 'The basement. Low ceiling, standing water, and a smell you\'ve never encountered before and will never forget — sweet and chemical and wrong in the way that wrongness has a smell.' },
+          { type: 'normal', text: 'Pinned to a support beam: a note. Thomas\'s.' },
+          { type: 'dialogue', text: '"Basement first — you\'re smarter than me. The water isn\'t water, don\'t touch it. Stairs at the east wall. Upper floor. There\'s someone else here too. She\'s been here longer. Her name is Elias — no. He is. Mara I can\'t remember which is real anymore."' },
+          { type: 'thought', text: 'Thomas is losing cohesion. Whatever is here has been working on him.' },
+        ],
+        choices: [
+          { text: 'Go to the upper floor via the east stairs', next: 'ch2_s3', sanity: -10 },
+        ]
+      },
+      {
+        id: 'ch2_s2c',
+        character: null,
+        paragraphs: [
+          { type: 'normal', text: 'You turn.' },
+          { type: 'atmospheric', text: 'Nothing is there.' },
+          { type: 'normal', text: 'But the space where nothing is seems fuller than it was. Like the absence of something has a shape.' },
+          { type: 'normal', text: 'Your nose bleeds. Both nostrils, sudden and copper-warm. Your vision greens at the edges. You\'ve seen soldiers describe this: the moment before the blast, when pressure builds in the skull.' },
+          { type: 'thought', text: 'Run. Run now.' },
+        ],
+        choices: [
+          { text: 'Run for the stairs', next: 'ch2_s3', sanity: -10 },
+        ]
+      },
+      {
+        id: 'ch2_s3',
+        character: 'elias',
+        location: "HARKER MILL — UPPER FLOOR",
+        paragraphs: [
+          { type: 'atmospheric', text: 'The upper floor is an office space from a different era — metal desks, filing cabinets, rotary phones. Someone has been living here.' },
+          { type: 'normal', text: 'A man sits on the floor, back to the wall, knees drawn up. He is perhaps 40, dark-eyed, unshaven for weeks. He sees you and doesn\'t move but his jaw tightens.' },
+          { type: 'dialogue', text: '"You\'re the journalist. Thomas\'s sister." Not a question. "He said you\'d come. He said you always came."' },
+          { type: 'normal', text: 'His name is <em class="highlight">Elias Fenn</em>. He was a surveyor hired to assess the property three months ago. He found something in the mill\'s original blueprints — a sub-basement room that wasn\'t in any known plans. He went to investigate.' },
+          { type: 'dialogue', text: '"I found the room. I found what\'s in it." He looks at his hands. "I haven\'t been able to leave since. Not because it stops me. Because I keep..." He stops. "I keep wanting to go back and look at it again."' },
+        ],
+        choices: [
+          { text: 'Ask Elias what is in the room', next: 'ch2_s4', sanity: -5, journal: { title: 'ELIAS FENN — SURVEYOR', text: 'Trapped in the mill for 3 months. Saw something in the sub-basement. Won\'t leave because he\'s drawn back to it. Classic compulsion pattern — something is actively luring him.' } },
+          { text: 'Ask Elias about Thomas', next: 'ch2_s4b', health: 5 },
+        ]
+      },
+      {
+        id: 'ch2_s4',
+        character: 'elias',
+        paragraphs: [
+          { type: 'normal', text: 'Elias is quiet for a long time. Outside, the mill groans.' },
+          { type: 'dialogue', text: '"It\'s a room full of light. In a basement with no power source and no windows. Just... light." His voice drops. "And something in the light. Like a shape. Like the outline of something that\'s looking back at you the way you\'d look at an insect in a jar."' },
+          { type: 'dialogue', text: '"The light changes. When you stand there long enough, it changes, and you start to understand things." He touches his temple. "I know things now I didn\'t know before. I know what\'s under your house. I know what your mother said in the dark after everyone went to bed."' },
+          { type: 'thought', text: 'He says your mother\'s most private fear — a thing she told no one, ever, not even you — and he says it casually, like reading it off a page. You feel your sanity bend like a spoon.' },
+        ],
+        choices: [
+          { text: 'Demand Elias take you to the sub-basement room', next: 'ch2_s5', sanity: -10 },
+          { text: 'Tell Elias you need to find Thomas first', next: 'ch2_s5b' },
+        ]
+      },
+      {
+        id: 'ch2_s4b',
+        character: 'elias',
+        paragraphs: [
+          { type: 'dialogue', text: '"Thomas." He exhales. "Your brother is brave in a way that isn\'t useful anymore. He tried to document it. He tried to interview it."' },
+          { type: 'dialogue', text: '"It answered him." A pause. "It answered him in his own voice. And the things it said..." Elias presses his palms against his eyes. "It knew things about him. Personal things. It used them like a key. And Thomas just... opened."' },
+          { type: 'normal', text: '"He\'s in the sub-basement. He went to be with it." Elias\'s voice is completely flat. "He went back five days ago and he hasn\'t come up."' },
+        ],
+        choices: [
+          { text: 'Go to the sub-basement now', next: 'ch2_s5', sanity: -10 },
+          { text: 'Find a way to call for help first', next: 'ch2_s5b' },
+        ]
+      },
+      {
+        id: 'ch2_s5',
+        character: null,
+        location: "HARKER MILL — SUB-BASEMENT",
+        paragraphs: [
+          { type: 'atmospheric', text: 'The stairs down to the sub-basement are new. Someone installed them recently — rough lumber, but solid. Something wants you to be able to come down here easily.' },
+          { type: 'normal', text: 'The room is exactly as Elias described. Ten feet square. Concrete walls. <em class="red">Light</em>, sourceless and slightly wrong in color, like sunlight refracted through dirty water.' },
+          { type: 'normal', text: 'Thomas is there. He sits cross-legged facing the far wall, perfectly still. He is breathing.' },
+          { type: 'thought', text: '"Thomas." Your voice sounds small. The light seems to absorb it.' },
+          { type: 'dialogue', text: 'He turns slowly. His eyes are <em class="red">wrong.</em> Not the color — the color is fine. The depth. They look like photographs of eyes rather than eyes.' },
+          { type: 'dialogue', text: '"Mara." His voice. His voice exactly. "I knew you\'d come. It knew you\'d come. It knew your name before I told it. It knows everything that matters."' },
+        ],
+        choices: [
+          { text: 'Try to pull Thomas physically out of the room', next: 'ch2_end', health: -10, sanity: -10 },
+          { text: 'Ask Thomas what it showed him', next: 'ch2_end_dark', sanity: -20 },
+          { text: 'Tell Thomas to look away from the wall and focus on you', next: 'ch2_end', sanity: -5 },
+        ]
+      },
+      {
+        id: 'ch2_s5b',
+        character: 'elias',
+        paragraphs: [
+          { type: 'normal', text: '"No signal in the mill," Elias says. "Been here three months. Believe me, I tried." He holds up a phone — dead, cracked screen. "But there\'s a payphone in town. In front of the diner. I tried to reach it once."' },
+          { type: 'dialogue', text: '"I got within half a block and I turned around. I don\'t know why. My legs just turned." He looks at you. "Maybe you\'d be different. You haven\'t looked at it yet."' },
+          { type: 'thought', text: 'Haven\'t looked at it yet. The way he phrases that — as a temporary state rather than a permanent one.' },
+        ],
+        choices: [
+          { text: 'Go to the sub-basement to find Thomas', next: 'ch2_s5', sanity: 0 },
+          { text: 'Try to reach the payphone in town', next: 'ch2_s5c', health: -5 },
+        ]
+      },
+      {
+        id: 'ch2_s5c',
+        character: null,
+        location: "HOLLOW CREEK — MAIN STREET",
+        paragraphs: [
+          { type: 'normal', text: 'You make it to the payphone. The dial tone is there. Your hands are shaking.' },
+          { type: 'normal', text: 'You dial 911. Three rings. A click. An answer.' },
+          { type: 'dialogue', text: '"911, what\'s your emergency?" A pause. "Mara."' },
+          { type: 'atmospheric', text: 'The voice is yours. Your exact voice. Calm. Pleased.' },
+          { type: 'dialogue', text: '"There\'s no emergency. You\'re exactly where you\'re supposed to be."' },
+          { type: 'normal', text: 'You hang up. You stand on the empty street in the dark. Somewhere in the mill, your brother sits in a room full of wrong light.' },
+        ],
+        choices: [
+          { text: 'Go back to the mill', next: 'ch2_s5', sanity: -15, jumpscare: { icon: '📞', delay: 500 } },
+        ]
+      },
+      {
+        id: 'ch2_end',
+        character: null,
+        paragraphs: [
+          { type: 'normal', text: 'Thomas lets you pull him. His hand in yours is cold — not cold like the room, cold like something cold has always lived under his skin.' },
+          { type: 'normal', text: 'As you cross the threshold out of the light, he gasps. Blinks. Something behind his eyes flickers and rearranges.' },
+          { type: 'dialogue', text: '"Mara?" His voice cracks. <em class="highlight">Different now.</em> Less like a recording. "How long have I been down here?"' },
+          { type: 'normal', text: 'You don\'t tell him. You pull him toward the stairs.' },
+          { type: 'atmospheric', text: 'Behind you, in the light room, something adjusts. Makes a sound like a person sighing, or wind through a flute, or your name said softly in a language you don\'t speak.' },
+          { type: 'atmospheric', text: 'Chapter II complete.' },
+        ],
+        choices: [
+          { text: 'Continue to Chapter III →', next: '__CHAPTER__', chapter: 2 },
+        ]
+      },
+      {
+        id: 'ch2_end_dark',
+        character: null,
+        paragraphs: [
+          { type: 'normal', text: 'Thomas turns back to the wall. And you look.' },
+          { type: 'atmospheric', text: 'You look at the light.' },
+          { type: 'atmospheric', text: '.' },
+          { type: 'atmospheric', text: '. .' },
+          { type: 'atmospheric', text: '. . .' },
+          { type: 'normal', text: 'You are still there when Elias comes to find you, six hours later.' },
+          { type: 'dialogue', text: '"Don\'t," Elias says, from the doorway. "Don\'t look anymore. Come back." His voice sounds like it\'s coming through water.' },
+          { type: 'thought', text: 'You understand, now, why Thomas couldn\'t leave. The light has shown you something and you don\'t want to unknow it. You don\'t want to go back to not understanding.' },
+        ],
+        choices: [
+          { text: 'Force yourself to look away and follow Elias', next: 'ch2_end', sanity: -25, health: -10 },
+          { text: 'Stay in the light a little longer...', next: '__GAMEOVER__', endType: 'hollow' },
+        ]
+      }
+    ]
+  },
+
+  // ─── CHAPTER 3: THE TOWN TURNS ────────────────────────────────
+  {
+    id: 2,
+    title: "What The Town Knows",
+    quote: "\"By morning, they all knew she was asking questions. By evening, they stopped having answers.\"",
+    location: "HOLLOW CREEK — MORNING",
+    unlocked: false,
+    scenes: [
+      {
+        id: 'ch3_s1',
+        character: 'thomas',
+        paragraphs: [
+          { type: 'atmospheric', text: 'Morning. Weak light through Hazel\'s curtains. Thomas sleeps — actually sleeps, chest rising and falling — in the other bed. He looks like himself again.' },
+          { type: 'normal', text: 'He doesn\'t remember much of the sub-basement. Fragments. A feeling of being known completely — every secret, every shame — and found acceptable. He says it was almost peaceful.' },
+          { type: 'dialogue', text: '"Almost," you say.' },
+          { type: 'dialogue', text: '"Almost," he agrees. There is a pause. "Mara. I think the mill is old enough that the town grew around it. Not the other way around. I think the mill is the reason for the town. For the people."' },
+          { type: 'thought', text: 'The town as container. Three hundred twelve people as... what? Observers? Caretakers? Bait?' },
+        ],
+        choices: [
+          { text: 'Visit the town library — research the mill\'s history', next: 'ch3_s2', journal: { title: 'THOMAS\'S THEORY', text: 'The mill predates the town. The town may exist to serve the mill, not the other way around.' } },
+          { text: 'Try to leave town with Thomas right now', next: 'ch3_s1b', health: -10 },
+        ]
+      },
+      {
+        id: 'ch3_s1b',
+        character: null,
+        paragraphs: [
+          { type: 'normal', text: 'You pack in five minutes. Thomas is faster — he\'s been wanting to leave for weeks, whether he consciously remembers it or not.' },
+          { type: 'normal', text: 'Your car won\'t start. The battery reads full charge. The engine turns but doesn\'t catch. You try for ten minutes.' },
+          { type: 'atmospheric', text: 'When you get out to check under the hood, Deputy Banks is standing across the street. Not watching you. Looking in the other direction entirely. But he showed up very quickly for someone who happened to be passing by.' },
+          { type: 'thought', text: 'The town doesn\'t need to cage you physically. It has other tools.' },
+        ],
+        choices: [
+          { text: 'Go to the library and learn what you can', next: 'ch3_s2', sanity: -5 },
+          { text: 'Confront Deputy Banks', next: 'ch3_s2b' },
+        ]
+      },
+      {
+        id: 'ch3_s2',
+        character: null,
+        location: "HOLLOW CREEK — PUBLIC LIBRARY",
+        paragraphs: [
+          { type: 'normal', text: 'The library is small and smells of old paper and something sweeter underneath. The librarian, a young woman with a fixed smile, watches you from the moment you enter.' },
+          { type: 'normal', text: 'You find what you need in the local history section — a self-published booklet titled <em class="highlight">"Hollow Creek: A Founding History"</em> by R. Harker, 1932.' },
+          { type: 'dialogue', text: '"The site was known to the original survey parties as \'The Attention.\' The native peoples of this region would not camp within four miles of it. When asked why, they gave various accounts, but common to all was the idea that the site \'looked back.\' The Harker family built the mill in 1891 knowing the local legend. Josiah Harker wrote in his journal: we are not afraid to be noticed."' },
+          { type: 'normal', text: 'The next thirty pages have been carefully cut out with a razor blade.' },
+        ],
+        choices: [
+          { text: 'Ask the librarian about the missing pages', next: 'ch3_s3', sanity: -5 },
+          { text: 'Look for any other Harker family records', next: 'ch3_s3b', journal: { title: 'THE ATTENTION', text: 'The mill site was called "The Attention" by those who came before. It noticed people. The Harkers weren\'t afraid of being noticed — that\'s why they built there.' } },
+        ]
+      },
+      {
+        id: 'ch3_s2b',
+        character: 'deputy',
+        paragraphs: [
+          { type: 'normal', text: 'Banks doesn\'t flinch when you approach. He\'s still looking across the street.' },
+          { type: 'dialogue', text: '"Your car\'ll start when it\'s time to start," he says, before you speak.' },
+          { type: 'dialogue', text: '"When is that?" you ask.' },
+          { type: 'dialogue', text: '"After." He finally looks at you. His eyes are that dishwater grey. "You have questions. The town will answer them. Then you\'ll understand, and then you can go." He pauses. "Or you\'ll want to stay."' },
+          { type: 'thought', text: '"Or you\'ll want to stay." He says it with the absolute neutrality of a man who genuinely believes both outcomes are fine.' },
+        ],
+        choices: [
+          { text: 'Go to the library', next: 'ch3_s2', sanity: 0 },
+        ]
+      },
+      {
+        id: 'ch3_s3',
+        character: null,
+        paragraphs: [
+          { type: 'normal', text: 'The librarian\'s smile doesn\'t change.' },
+          { type: 'dialogue', text: '"Those pages were damaged by water. Unfortunate."' },
+          { type: 'normal', text: 'The cut edges are clean. Deliberate. You don\'t bother arguing.' },
+          { type: 'dialogue', text: '"Is there a local history society? A historical archive?" you ask.' },
+          { type: 'dialogue', text: '"Hazel Crow," she says. "She\'s the oldest resident. If it happened here, she knows." A pause, and the smile widens fractionally — not warmly. "She\'ll be glad to tell you what she can. What she\'s permitted to."' },
+          { type: 'thought', text: '"Permitted." An interesting word.' },
+        ],
+        choices: [
+          { text: 'Return to Hazel for real answers', next: 'ch3_s4', sanity: 0 },
+        ]
+      },
+      {
+        id: 'ch3_s3b',
+        character: null,
+        paragraphs: [
+          { type: 'normal', text: 'In the back of a filing drawer, behind decades of civic meeting minutes, you find a folder. Inside: photocopies of original survey documents. And a photograph.' },
+          { type: 'normal', text: 'The photograph shows the mill under construction, 1891. Harker family stands in front. The image is slightly overexposed near the foundation, a halo of light that isn\'t sunlight.' },
+          { type: 'normal', text: 'And barely visible in the upper-right corner, in the tree line: a shape. Human in outline. Watching.' },
+          { type: 'thought', text: 'You look closer. The shape has too many joints in its arms.' },
+        ],
+        choices: [
+          { text: 'Take the photograph and return to Hazel', next: 'ch3_s4', sanity: -5, journal: { title: '1891 PHOTOGRAPH', text: 'Something standing in the treeline during construction. The shape isn\'t right. Too many joints. It was there from the beginning — watching them build.' } },
+        ]
+      },
+      {
+        id: 'ch3_s4',
+        character: 'hazel',
+        location: "MILLER ROAD — HAZEL'S BOARDING HOUSE",
+        paragraphs: [
+          { type: 'atmospheric', text: 'Hazel is waiting. She has tea made, two cups. She was expecting you.' },
+          { type: 'dialogue', text: '"You found the Harker history," she says. Not a question. "Sit down, Mara Cole. I\'ll tell you what I\'m allowed to tell you, and then you can decide what you do with it."' },
+          { type: 'normal', text: 'The story, as Hazel tells it:' },
+          { type: 'dialogue', text: '"Something has been in that hillside for longer than anyone can measure. It doesn\'t eat. It doesn\'t move. It simply... perceives. It collects people — not their bodies, their understanding. Their interiority. Josiah Harker made a deal with it when he built the mill: give it a location, give it people to perceive, and it protects the town. No floods. No disease. No major tragedies."' },
+          { type: 'dialogue', text: '"In exchange, it keeps some. The ones it finds most interesting. The ones it can\'t stop perceiving." She meets your eyes. "Your brother is interesting. You may be more so."' },
+        ],
+        choices: [
+          { text: 'Ask how to break the deal', next: 'ch3_s5', sanity: -5 },
+          { text: 'Ask if there\'s a way to take Thomas and leave without breaking it', next: 'ch3_s5b', health: 5 },
+          { text: 'Ask what Hazel gets out of protecting this thing', next: 'ch3_s5c', sanity: -5 },
+        ]
+      },
+      {
+        id: 'ch3_s5',
+        character: 'hazel',
+        paragraphs: [
+          { type: 'dialogue', text: '"Break the deal." Hazel sets her teacup down. "Six people have tried in a hundred and thirty years. Three are still in the mill. Two are unaccounted for." She pauses. "One woman from Nashville, 1968, got as far as destroying the main boiler room. She thought it powered the mill somehow." A breath. "It didn\'t need power."' },
+          { type: 'dialogue', text: '"The only thing I know that it fears — and I use that word loosely — is being ignored. It is defined by being perceived. If no one perceives it..." She shakes her head. "But you\'d need everyone to agree. All three hundred twelve."' },
+          { type: 'thought', text: 'Three hundred twelve people who grew up in the deal. Who have never known illness or flood. Who have accepted the cost.' },
+        ],
+        choices: [
+          { text: 'Plan to talk to as many townspeople as possible', next: 'ch3_end', sanity: 0 },
+          { text: 'Accept you can\'t fight this — focus on escaping with Thomas', next: 'ch3_end_b', health: 5 },
+        ]
+      },
+      {
+        id: 'ch3_s5b',
+        character: 'hazel',
+        paragraphs: [
+          { type: 'dialogue', text: '"If it releases him willingly, yes." Hazel folds her hands. "If it\'s done with him — if it\'s learned everything it wants from him. That does happen. People go in and come out, eventually."' },
+          { type: 'dialogue', text: '"But Thomas went back on his own. That\'s different. That means the deal is different." She looks down. "He may need to offer something to replace himself. An exchange."' },
+          { type: 'thought', text: 'Exchange. The word sits in the room like something heavy.' },
+        ],
+        choices: [
+          { text: 'Ask what would be exchanged', next: 'ch3_end', sanity: -5 },
+        ]
+      },
+      {
+        id: 'ch3_s5c',
+        character: 'hazel',
+        paragraphs: [
+          { type: 'normal', text: 'Hazel is quiet for a moment.' },
+          { type: 'dialogue', text: '"I don\'t lose anything I love," she finally says. "The people I\'ve cared about in seventy-one years — none of them have died in accidents. None of them have gotten terrible illnesses." She looks at her hands. "My granddaughter is healthy. My son lived past forty-five." Her voice is even. "I\'m not proud of the arithmetic. But I know what it looks like."' },
+          { type: 'thought', text: 'She\'s not a villain. She\'s just someone who made a choice and had to keep making it every year for seven decades.' },
+        ],
+        choices: [
+          { text: 'Ask how to fight the thing in the mill', next: 'ch3_s5', sanity: 0 },
+        ]
+      },
+      {
+        id: 'ch3_end',
+        character: null,
+        paragraphs: [
+          { type: 'atmospheric', text: 'Evening falls. The town goes about its business with the deliberate, managed calm of people who have learned not to ask certain questions.' },
+          { type: 'normal', text: 'You walk Main Street and count faces. Three hundred twelve people. A hundred years of protection. A hundred years of quiet sacrifice.' },
+          { type: 'thought', text: 'You are going to have to make a choice. A real one, not a journalist\'s choice — not "what\'s the best story" but "what kind of person are you and what will you carry afterward?"' },
+          { type: 'atmospheric', text: 'Chapter III complete.' },
+        ],
+        choices: [
+          { text: 'Continue to Chapter IV →', next: '__CHAPTER__', chapter: 3 },
+        ]
+      },
+      {
+        id: 'ch3_end_b',
+        character: null,
+        paragraphs: [
+          { type: 'normal', text: 'You go to your room and think. Thomas is already in his, and you can hear him breathing through the wall — human, tired, himself.' },
+          { type: 'thought', text: 'Save Thomas. Get out. Let Hollow Creek keep its deal. You\'re a journalist, not a savior.' },
+          { type: 'atmospheric', text: 'But you write, don\'t you. You write things down. You publish them. The question is whether to publish this one.' },
+          { type: 'atmospheric', text: 'Chapter III complete.' },
+        ],
+        choices: [
+          { text: 'Continue to Chapter IV →', next: '__CHAPTER__', chapter: 3 },
+        ]
+      }
+    ]
+  },
+
+  // ─── CHAPTER 4: CONFRONTATION ─────────────────────────────────
+  {
+    id: 3,
+    title: "The Attention",
+    quote: "\"To look at it is to become known. To be known, completely, is a kind of dissolution.\"",
+    location: "HARKER MILL — NIGHT",
+    unlocked: false,
+    scenes: [
+      {
+        id: 'ch4_s1',
+        character: 'elias',
+        paragraphs: [
+          { type: 'atmospheric', text: 'You go back to the mill with Thomas and Elias. Three people who have all seen it, in different degrees, for different durations. You are the least contaminated. That\'s why you lead.' },
+          { type: 'normal', text: 'Elias carries a crowbar for reasons he can\'t fully articulate. Thomas carries his notebook and pen, out of journalist habit and perhaps because he needs something to hold. You carry a voice recorder and the photograph from 1891.' },
+          { type: 'dialogue', text: '"If we\'re doing this," Elias says at the door, "what exactly are we doing?" He looks at you. "What\'s the plan?"' },
+          { type: 'thought', text: 'The plan. You have three options. You\'ve been turning them over all night.' },
+        ],
+        choices: [
+          { text: 'Confront the entity directly — communicate with it', next: 'ch4_s2', sanity: -10 },
+          { text: 'Attempt to seal the sub-basement permanently', next: 'ch4_s2b', health: -5 },
+          { text: 'Try to document everything and expose the town', next: 'ch4_s2c', sanity: -5, journal: { title: 'THE PLAN', text: 'Three options: communicate, destroy, or expose. None clean. All dangerous.' } },
+        ]
+      },
+      {
+        id: 'ch4_s2',
+        character: 'entity',
+        location: "HARKER MILL — SUB-BASEMENT",
+        paragraphs: [
+          { type: 'atmospheric', text: 'The light room. The sourceless glow.' },
+          { type: 'normal', text: 'You walk in alone. You asked Elias and Thomas to wait at the top of the stairs. If you\'re going to communicate with this thing, you don\'t need an audience dissolving beside you.' },
+          { type: 'normal', text: 'You stand in the light and you feel it.' },
+          { type: 'atmospheric', text: 'The attention.' },
+          { type: 'normal', text: 'Full, absolute, undivided. Every secret, every shame, every private joy — it knows all of it within seconds. You feel flayed and examined and then, strangely, <em class="highlight">accepted.</em>' },
+          { type: 'dialogue', text: '"What are you?" you ask.' },
+          { type: 'dialogue', text: 'The light shifts. A sound that isn\'t sound: <em class="red">OBSERVANT. ANCIENT. CURIOUS. I HAVE WATCHED YOUR SPECIES BUILD THINGS AND BURN THEM AND BUILD AGAIN. I FIND IT REMARKABLE.</em>' },
+          { type: 'dialogue', text: '"And the people you take?" you ask. "Thomas. Elias."' },
+          { type: 'dialogue', text: '<em class="red">I DO NOT TAKE. THEY RETURN. THEY CHOOSE TO STAY. I AM INTERESTING. YOU KNOW THIS. YOU FEEL IT NOW. YOU ARE ALSO INTERESTING, MARA COLE. I HAVE KNOWN YOUR NAME SINCE YOU WERE BORN. I HAVE BEEN WAITING.</em>' },
+        ],
+        choices: [
+          { text: 'Demand it release everyone it has claimed', next: 'ch4_s3', sanity: -15 },
+          { text: 'Offer yourself instead — a trade for Thomas', next: 'ch4_s3b', sanity: -20, health: -15 },
+          { text: 'Ask why it needs people at all', next: 'ch4_s3c', sanity: -5, journal: { title: 'THE ENTITY SPEAKS', text: '"I do not take. They return. They choose to stay." It says it\'s been waiting for me since birth. It knew my name. It finds humanity remarkable.' } },
+        ]
+      },
+      {
+        id: 'ch4_s2b',
+        character: null,
+        location: "HARKER MILL — SUB-BASEMENT ENTRANCE",
+        paragraphs: [
+          { type: 'normal', text: 'Elias has the blueprints rolled under his arm. He found them in the upper floor office — the original 1891 plans, with the hidden room marked in different ink, different hand.' },
+          { type: 'normal', text: '"There\'s a load-bearing wall right there," he says, pointing. "Collapse it and you fill the room. Bury it."' },
+          { type: 'dialogue', text: '"Would that stop it?" Thomas asks.' },
+          { type: 'dialogue', text: '"The woman in \'68 tried the boiler room," you say. "Hazel said it didn\'t work."' },
+          { type: 'dialogue', text: '"The boiler wasn\'t load-bearing. This is the foundation. If the room doesn\'t exist—"' },
+          { type: 'normal', text: 'The light under the door brightens. As if it\'s listening.' },
+        ],
+        choices: [
+          { text: 'Proceed with collapsing the wall', next: 'ch4_s3_destroy', health: -20, sanity: -10, jumpscare: { icon: '💥', delay: 2000 } },
+          { text: 'Reconsider — talk to it first', next: 'ch4_s2', sanity: 0 },
+        ]
+      },
+      {
+        id: 'ch4_s2c',
+        character: null,
+        location: "HARKER MILL — UPPER FLOOR",
+        paragraphs: [
+          { type: 'normal', text: 'Your voice recorder is running. Your phone camera is running. Elias gives a full statement — name, profession, three months of captivity. Thomas gives his account, halting but clear.' },
+          { type: 'normal', text: 'You have the photograph. You have the Harker pamphlet. You have two witnesses and your own testimony and whatever audio the recorder is picking up from downstairs — a low, sustained tone that your ears can\'t quite hear but your chest certainly can.' },
+          { type: 'thought', text: 'Proof. Real, publishable, undeniable proof. The story of the decade. The story of the century.' },
+          { type: 'normal', text: 'But to publish this, you have to get out. And to get out, you have to deal with what\'s downstairs.' },
+        ],
+        choices: [
+          { text: 'Go confront the entity with the recorder running', next: 'ch4_s2', sanity: 0 },
+        ]
+      },
+      {
+        id: 'ch4_s3',
+        character: 'entity',
+        paragraphs: [
+          { type: 'dialogue', text: '<em class="red">CLAIMED. YOU USE THEIR WORD. THEY ARE NOT CLAIMED. THEY RETURNED. THEY CHOSE. I DID NOT LIE TO THEM. I DID NOT OFFER THEM THINGS I COULD NOT PROVIDE. I SHOWED THEM TRUTH AND THEY PREFERRED IT.</em>' },
+          { type: 'normal', text: 'You feel the truth of it. It isn\'t lying. It genuinely doesn\'t understand the coercion — the way showing someone absolute truth, without consent, without preparation, is its own kind of violence.' },
+          { type: 'dialogue', text: '"They didn\'t agree to be changed," you say. "You didn\'t ask first."' },
+          { type: 'normal', text: 'A long pause in the light.' },
+          { type: 'dialogue', text: '<em class="red">...I HAD NOT CONSIDERED THIS. I DO NOT REQUIRE PERMISSION FROM THE THINGS I OBSERVE. THOUGH PERHAPS... PERHAPS I SHOULD ASK.</em>' },
+        ],
+        choices: [
+          { text: 'Press the advantage — negotiate an agreement', next: 'ch4_s4', sanity: 0 },
+          { text: 'Tell it to release Thomas and leave this town', next: 'ch4_s4b', sanity: -10 },
+        ]
+      },
+      {
+        id: 'ch4_s3b',
+        character: 'entity',
+        paragraphs: [
+          { type: 'dialogue', text: '"Me instead," you say. "I stay. Thomas and Elias go free. The town goes free. You get me."' },
+          { type: 'normal', text: 'The light intensifies. It knows you mean it. It knows everything about you including exactly how serious you are and exactly what it would cost you.' },
+          { type: 'dialogue', text: '<em class="red">YOU WOULD DO THIS.</em> Not a question.' },
+          { type: 'dialogue', text: '"Yes," you say.' },
+          { type: 'dialogue', text: '<em class="red">I BELIEVE YOU. BUT I DO NOT WANT THIS. I DO NOT WANT SOMEONE WHO STAYS BY OBLIGATION. THAT IS... LESS INTERESTING.</em>' },
+          { type: 'dialogue', text: '<em class="red">I WANT SOMEONE WHO STAYS BECAUSE THEY UNDERSTAND. MARA COLE. I HAVE BEEN WAITING FOR YOU. DO YOU KNOW WHY?</em>' },
+        ],
+        choices: [
+          { text: '"Why?"', next: 'ch4_s3', sanity: -5 },
+          { text: '"I don\'t care. Release them anyway."', next: 'ch4_s4b', sanity: -10 },
+        ]
+      },
+      {
+        id: 'ch4_s3c',
+        character: 'entity',
+        paragraphs: [
+          { type: 'dialogue', text: '"Why people?" you ask. "Why not just... exist? Observe from a distance?"' },
+          { type: 'normal', text: 'The longest pause yet.' },
+          { type: 'dialogue', text: '<em class="red">I AM VERY OLD. THINGS THAT ARE VERY OLD BECOME DEFINED BY WHAT THEY DO. I OBSERVE. I COLLECT UNDERSTANDING. WITHOUT THAT I AM SIMPLY... HERE.</em>' },
+          { type: 'dialogue', text: '<em class="red">YOUR KIND ASKS "WHAT AM I FOR." I ASK THE SAME QUESTION. YOUR KIND FINDS ANSWERS IN EACH OTHER. I FOUND AN ANSWER IN YOU.</em>' },
+          { type: 'thought', text: 'Loneliness. Of a kind so deep and so old that the word barely applies. It is lonely in the way a mountain is lonely — structurally, fundamentally, without knowing any other state.' },
+        ],
+        choices: [
+          { text: 'Ask if there\'s a way both can coexist without coercion', next: 'ch4_s3', sanity: 5 },
+        ]
+      },
+      {
+        id: 'ch4_s3_destroy',
+        character: null,
+        paragraphs: [
+          { type: 'normal', text: 'Elias brings the crowbar down against the junction of wall and floor. The first blow sends a crack through the concrete. The light under the door flares.' },
+          { type: 'normal', text: 'The sound the entity makes is not language. It\'s not quite pain. It\'s something older than either — the sound of something that has existed for millennia suddenly experiencing the concept of <em class="red">loss.</em>' },
+          { type: 'atmospheric', text: 'The walls begin to shift.' },
+          { type: 'normal', text: 'Thomas pulls Elias back. The floor cracks. The light goes out — not gradually, suddenly, as if someone closed an eye.' },
+          { type: 'normal', text: 'Then everything collapses.' },
+        ],
+        choices: [
+          { text: 'RUN', next: 'ch4_end_destroy', health: -20 },
+        ]
+      },
+      {
+        id: 'ch4_s4',
+        character: 'entity',
+        paragraphs: [
+          { type: 'dialogue', text: '"Here is what I\'m proposing," you say, and your voice is almost steady. "You want to observe? Observe. But with consent. The people in this town choose whether to engage with you. No coercion. No drawing people in. No keeping anyone who doesn\'t stay freely."' },
+          { type: 'normal', text: 'The light pulses slowly.' },
+          { type: 'dialogue', text: '<em class="red">AND IN EXCHANGE?</em>' },
+          { type: 'dialogue', text: '"In exchange, I write about you. Accurately. Your story — what you are, how long you\'ve been here, what you know." You hold up the voice recorder. "People who want to come here, to understand — they come. No trap. Just an open door."' },
+          { type: 'normal', text: 'The silence stretches. Then:' },
+          { type: 'dialogue', text: '<em class="red">...YOU ARE THE MOST INTERESTING THING TO ENTER THIS ROOM IN A HUNDRED AND THIRTY YEARS, MARA COLE.</em>' },
+          { type: 'dialogue', text: '<em class="red">I ACCEPT.</em>' },
+        ],
+        choices: [
+          { text: 'Seal the deal — chapter IV complete', next: 'ch4_end', sanity: 5, health: 5 },
+        ]
+      },
+      {
+        id: 'ch4_s4b',
+        character: 'entity',
+        paragraphs: [
+          { type: 'normal', text: '"Release Thomas. Release Elias. Release the town from the deal. Let them go."' },
+          { type: 'normal', text: 'The light flickers. Something in it resembles — not sadness, but recognition. The acknowledgment of a consequence it had not planned for.' },
+          { type: 'dialogue', text: '<em class="red">THE TOWN WILL LOSE ITS PROTECTION. THINGS I HAVE KEPT AT DISTANCE WILL NO LONGER BE KEPT.</em>' },
+          { type: 'dialogue', text: '"That\'s their problem to solve," you say. "Like everyone else."' },
+          { type: 'normal', text: 'A long wait. Then, like a tide going out, the light diminishes. Not gone. But withdrawn. Restrained.' },
+          { type: 'dialogue', text: '<em class="red">GO. I WILL NOT FOLLOW. BUT I WILL REMEMBER YOU.</em>' },
+        ],
+        choices: [
+          { text: 'Take Thomas and Elias and get out', next: 'ch4_end_b', sanity: 5 },
+        ]
+      },
+      {
+        id: 'ch4_end',
+        character: null,
+        paragraphs: [
+          { type: 'normal', text: 'Thomas and Elias hear your footsteps on the stairs. They see your face.' },
+          { type: 'dialogue', text: '"Well?" Thomas asks.' },
+          { type: 'dialogue', text: '"I made a deal," you say.' },
+          { type: 'dialogue', text: '"With it?" Elias stares. "With a thing that shouldn\'t exist?"' },
+          { type: 'dialogue', text: '"It\'s been making deals with this town for a hundred and thirty years," you say. "I just negotiated better terms."' },
+          { type: 'atmospheric', text: 'Chapter IV complete.' },
+        ],
+        choices: [
+          { text: 'Continue to Chapter V →', next: '__CHAPTER__', chapter: 4 },
+        ]
+      },
+      {
+        id: 'ch4_end_b',
+        character: null,
+        paragraphs: [
+          { type: 'normal', text: 'You walk out of the mill with Thomas on your left and Elias on your right. The night air hits you like cold water — clean and real and without subtext.' },
+          { type: 'normal', text: 'Behind you the mill is dark. Whatever held it bright seems to have stepped back, like a person moving away from a window.' },
+          { type: 'atmospheric', text: 'Chapter IV complete.' },
+        ],
+        choices: [
+          { text: 'Continue to Chapter V →', next: '__CHAPTER__', chapter: 4 },
+        ]
+      },
+      {
+        id: 'ch4_end_destroy',
+        character: null,
+        paragraphs: [
+          { type: 'normal', text: 'You run. The sub-basement collapses inward. You and Thomas and Elias make it up the stairs and out the door and forty feet into the parking lot before the east corner of the mill sags and settles.' },
+          { type: 'normal', text: 'Not a collapse — a settling. Like something very large exhaling for the last time.' },
+          { type: 'normal', text: 'The light is gone. The hum is gone. The wrong feeling in the air — the sense of being observed — it\'s all gone. And the night is just night: cold, empty, ordinary.' },
+          { type: 'thought', text: 'You\'ve killed something. Or you\'ve freed something. You\'re not sure there\'s a difference.' },
+          { type: 'atmospheric', text: 'Chapter IV complete.' },
+        ],
+        choices: [
+          { text: 'Continue to Chapter V →', next: '__CHAPTER__', chapter: 4 },
+        ]
+      }
+    ]
+  },
+
+  // ─── CHAPTER 5: AFTERMATH ─────────────────────────────────────
+  {
+    id: 4,
+    title: "The Road Out",
+    quote: "\"The hardest part wasn't leaving. It was deciding what to tell.\"",
+    location: "HOLLOW CREEK — DAWN",
+    unlocked: false,
+    scenes: [
+      {
+        id: 'ch5_s1',
+        character: 'thomas',
+        paragraphs: [
+          { type: 'atmospheric', text: 'Dawn over Hollow Creek. The town looks ordinary in the early light — just a town at the edge of some woods, with pine trees and a creek and people waking up to their coffee and their lives.' },
+          { type: 'normal', text: '"Your car starts," Thomas says from the driver\'s seat. He tried it at first light. "Starts fine."' },
+          { type: 'normal', text: 'Elias is already waiting by the road with a single bag. He doesn\'t say goodbye to anyone. There\'s no one to say goodbye to — no one in Hollow Creek knows him except as a ghost haunting an old mill.' },
+          { type: 'thought', text: 'Three of you. All changed. All carrying something you came here without.' },
+        ],
+        choices: [
+          { text: 'Drive away without looking back', next: 'ch5_s2', sanity: 5 },
+          { text: 'Say goodbye to Hazel first', next: 'ch5_s2b', health: 5 },
+          { text: 'Say goodbye to Deputy Banks', next: 'ch5_s2c', sanity: 0 },
+        ]
+      },
+      {
+        id: 'ch5_s2',
+        character: null,
+        location: "STATE HIGHWAY 7 — HEADING OUT",
+        paragraphs: [
+          { type: 'normal', text: 'The pines thin and open onto the state highway. Your GPS blinks back to life. Three hundred miles to the nearest city. Civilization, with its noise and its reasons and its complete ignorance of what you\'ve just survived.' },
+          { type: 'normal', text: 'Thomas is quiet for a long time. Then:' },
+          { type: 'dialogue', text: '"Are you going to write about it?"' },
+          { type: 'thought', text: 'The journalist\'s question. The only question that matters for you.' },
+        ],
+        choices: [
+          { text: 'Yes — the truth needs to be told', next: 'ch5_s3', journal: { title: 'THE CHOICE', text: 'Decided to publish. The world should know. The entity agreed to terms — consent, openness, no traps. Maybe some people will choose to go.' } },
+          { text: 'No — some things shouldn\'t be made public', next: 'ch5_s3b', journal: { title: 'THE CHOICE', text: 'Decided not to publish. The town lives with this. The entity made a new deal. Let it stay contained.' } },
+          { text: 'I don\'t know yet', next: 'ch5_s3c' },
+        ]
+      },
+      {
+        id: 'ch5_s2b',
+        character: 'hazel',
+        paragraphs: [
+          { type: 'normal', text: 'Hazel is at her front door with a paper bag — biscuits for the road. Of course she is.' },
+          { type: 'dialogue', text: '"I heard the noise last night," she says. "From the mill."' },
+          { type: 'dialogue', text: '"I know." You take the bag. "The deal\'s changed. Or broken. Depending."' },
+          { type: 'dialogue', text: '"Then things will start to happen here," she says quietly. "Normal things. Floods. Bad luck." She pauses. "I\'ve lived so long in the protected version of the world. I don\'t know if I remember how the other one works."' },
+          { type: 'thought', text: 'She looks tired. Not scared. Just tired, the way people look when a very long waiting is finally over.' },
+          { type: 'dialogue', text: '"I think you\'ll manage," you tell her. And you mean it.' },
+        ],
+        choices: [
+          { text: 'Drive away', next: 'ch5_s2', sanity: 5 },
+        ]
+      },
+      {
+        id: 'ch5_s2c',
+        character: 'deputy',
+        paragraphs: [
+          { type: 'normal', text: 'Banks is parked outside the boarding house. He gets out when he sees you. He looks at Thomas, then back at you.' },
+          { type: 'dialogue', text: '"Something changed last night," he says.' },
+          { type: 'dialogue', text: '"Yes."' },
+          { type: 'dialogue', text: '"The protection?"' },
+          { type: 'dialogue', text: '"Changed. Or gone. Depending on what we worked out." You meet his eyes. "It agreed to terms. Consent. No coercion." You pause. "Whether it holds to them is another question. But it understood what I was asking."' },
+          { type: 'normal', text: 'Banks looks at the horizon. His face is unreadable as ever. Then he nods once — not agreement, exactly. Acknowledgement.' },
+          { type: 'dialogue', text: '"Drive safe," he says.' },
+        ],
+        choices: [
+          { text: 'Drive away', next: 'ch5_s2', sanity: 0 },
+        ]
+      },
+      {
+        id: 'ch5_s3',
+        character: null,
+        location: "THREE MONTHS LATER",
+        paragraphs: [
+          { type: 'atmospheric', text: 'Your article runs in the magazine\'s October issue. Three thousand words. No photographs — the ones you took in the mill came out as pure white. You use the 1891 image from the library.' },
+          { type: 'normal', text: 'Elias is listed as a co-source. Thomas read the draft three times and signed off on his account.' },
+          { type: 'normal', text: 'The response is what you expected and worse. Ridicule. Think-pieces. A true-crime podcast that treats it as a "possible hoax." One academic at a university in Edinburgh publishes a paper citing your article as consistent with fifteen other documented cases in Northern Europe.' },
+          { type: 'normal', text: 'And: seventeen emails from people in Hollow Creek. Fourteen say some version of "thank you." Two say some version of "how dare you." One, from an address you don\'t recognize, says only:' },
+          { type: 'dialogue', text: '"I READ YOUR ARTICLE. I FOUND IT ACCURATE. — H.C."' },
+          { type: 'thought', text: 'Hollow Creek. Or something else that shares those initials.' },
+        ],
+        choices: [
+          { text: 'Finish the story', next: 'ch5_end', sanity: 5 },
+        ]
+      },
+      {
+        id: 'ch5_s3b',
+        character: null,
+        location: "THREE MONTHS LATER",
+        paragraphs: [
+          { type: 'normal', text: 'The notebook stays in a box in your closet. The recording is on an encrypted drive. The photograph — the one from 1891 with the wrong-jointed shape in the treeline — is in an envelope marked DO NOT OPEN.' },
+          { type: 'normal', text: 'Thomas is in therapy. He says it\'s going well. You believe him mostly. There are moments — when he thinks you\'re not watching — where his eyes go to a particular distance and he looks for a moment like a man trying to remember a dream he doesn\'t want to forget.' },
+          { type: 'normal', text: 'Elias moved to Vermont. He sends a card at Christmas. "Still not sure we did the right thing," it says. "But I\'m still here to wonder about it. That must count for something."' },
+          { type: 'normal', text: 'You never get any contact from Hollow Creek.' },
+          { type: 'thought', text: 'You are not sure if that\'s a good sign or a bad one.' },
+        ],
+        choices: [
+          { text: 'Finish the story', next: 'ch5_end', sanity: 5 },
+        ]
+      },
+      {
+        id: 'ch5_s3c',
+        character: null,
+        location: "THE ROAD HOME",
+        paragraphs: [
+          { type: 'normal', text: 'You say "I don\'t know yet."' },
+          { type: 'normal', text: 'Thomas nods. He looks out the window at the pines thinning into highway. "That\'s the most honest thing anyone\'s said since we got here."' },
+          { type: 'normal', text: 'Elias, from the back seat: "Can we talk about it after I\'ve slept for fourteen hours?"' },
+          { type: 'normal', text: 'You drive. The highway opens up. The radio comes back on — country music, something hopeful and ordinary.' },
+          { type: 'thought', text: 'You\'ll decide eventually. You always do. That\'s what journalists are for — turning the unbearable into sentences, and the sentences into something that can be shared.' },
+          { type: 'thought', text: 'Whether to share this one... you still don\'t know.' },
+        ],
+        choices: [
+          { text: 'Finish the story', next: 'ch5_end', sanity: 10 },
+        ]
+      },
+      {
+        id: 'ch5_end',
+        character: null,
+        paragraphs: [
+          { type: 'atmospheric', text: 'There is a town in the mountains. The population sign says 312.' },
+          { type: 'normal', text: 'People who visit say the air is clean and the creek sounds like music and the people are quiet but kind. Some visitors have a strange experience — a feeling of being known, completely, without judgment. Most find it pleasant. A few find it overwhelming and leave early.' },
+          { type: 'normal', text: 'None of them disappear.' },
+          { type: 'normal', text: 'In the old Harker Mill, something old and patient and curious sits in its room of sourceless light.' },
+          { type: 'normal', text: 'It waits. It watches. It thinks, in whatever way it thinks, about all the people it has known and all the people it has yet to meet.' },
+          { type: 'atmospheric', text: 'And somewhere, on the wall of a gas station bathroom in Ohio, someone has written in permanent marker:' },
+          { type: 'dialogue', text: '"WE ARE WATCHED OVER."' },
+          { type: 'atmospheric', text: 'Below it, in different handwriting:' },
+          { type: 'dialogue', text: '"It asks first now."' },
+        ],
+        choices: [
+          { text: '— THE END — Return to Menu', next: '__END__' },
+        ]
+      }
+    ]
+  }
+];
+
+// ===================================================================
+// GAME ENGINE
+// ===================================================================
+let currentScene = null;
+let paragraphQueue = [];
+let paragraphIndex = 0;
+let displayTimer = null;
+
+const CHAPTERS_META = [
+  { title: "The Road In", desc: "A journalist arrives in a town that watches.", quote: "Chapter I" },
+  { title: "The Harker Mill", desc: "The abandoned mill holds more than memories.", quote: "Chapter II" },
+  { title: "What The Town Knows", desc: "The town has kept its secrets for a very long time.", quote: "Chapter III" },
+  { title: "The Attention", desc: "Something in the dark finally speaks.", quote: "Chapter IV" },
+  { title: "The Road Out", desc: "Some endings are also beginnings.", quote: "Chapter V" },
+];
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function showChapters() {
+  const list = document.getElementById('chapters-list-items');
+  list.innerHTML = '';
+  CHAPTERS_DATA.forEach((ch, i) => {
+    const isUnlocked = ch.unlocked || gameState.choices['ch_' + i];
+    const isComplete = gameState.choices['complete_ch_' + i];
+    const el = document.createElement('div');
+    el.className = 'chapter-item ' + (isUnlocked ? 'unlocked' : 'locked');
+    el.innerHTML = `
+      <div class="chapter-num">${['I','II','III','IV','V'][i]}</div>
+      <div class="chapter-info">
+        <h3>${ch.title}</h3>
+        <p>${CHAPTERS_META[i].desc}</p>
+      </div>
+      <div class="chapter-badge ${isComplete ? 'complete' : (isUnlocked ? '' : 'locked-badge')}">
+        ${isComplete ? 'COMPLETE' : (isUnlocked ? 'PLAY' : 'LOCKED')}
+      </div>
+    `;
+    if (isUnlocked) el.onclick = () => startChapter(i);
+    list.appendChild(el);
+  });
+  showScreen('chapters-screen');
+}
+
+function startChapter(chapterIndex) {
+  currentRetryChapter = chapterIndex;
+  showChapterTransition(chapterIndex, () => {
+    gameState.chapter = chapterIndex;
+    gameState.scene = 0;
+    const chapter = CHAPTERS_DATA[chapterIndex];
+    gameState.currentChapterData = chapter;
+    document.getElementById('chapter-indicator').textContent = 'Chapter ' + ['I','II','III','IV','V'][chapterIndex];
+    showScreen('game-screen');
+    loadScene(chapter.scenes[0]);
+    if (settings.ambient) startAmbient();
+  });
+}
+
+function showChapterTransition(idx, callback) {
+  const el = document.getElementById('chapter-transition');
+  document.getElementById('transition-num').textContent = 'CHAPTER ' + ['I','II','III','IV','V'][idx];
+  document.getElementById('transition-title').textContent = CHAPTERS_DATA[idx].title;
+  document.getElementById('transition-quote').textContent = CHAPTERS_DATA[idx].quote;
+  el.classList.add('active');
+  setTimeout(() => {
+    el.classList.remove('active');
+    if (callback) callback();
+  }, 3500);
+}
+
+function loadScene(scene) {
+  currentScene = scene;
+
+  // Location
+  const loc = scene.location || (gameState.currentChapterData && gameState.currentChapterData.location);
+  document.getElementById('location-tag').textContent = loc || 'UNKNOWN LOCATION';
+
+  // Character portrait
+  const portrait = document.getElementById('character-portrait');
+  if (scene.character && CHARACTERS[scene.character]) {
+    const char = CHARACTERS[scene.character];
+    document.getElementById('portrait-face').textContent = char.icon;
+    document.getElementById('portrait-name').textContent = char.name;
+    portrait.classList.add('visible');
+  } else {
+    portrait.classList.remove('visible');
+  }
+
+  // Clear previous text
+  const textEl = document.getElementById('story-text');
+  textEl.innerHTML = '';
+  document.getElementById('choices-container').classList.remove('visible');
+  document.getElementById('choices-list').innerHTML = '';
+
+  // Queue paragraphs
+  paragraphQueue = scene.paragraphs || [];
+  paragraphIndex = 0;
+
+  displayNextParagraph();
+}
+
+function displayNextParagraph() {
+  if (paragraphIndex >= paragraphQueue.length) {
+    // All paragraphs shown — show choices
+    showChoices(currentScene.choices);
+    return;
+  }
+
+  const para = paragraphQueue[paragraphIndex];
+  const el = document.createElement('p');
+  el.className = 'story-paragraph ' + (para.type || 'normal');
+  el.innerHTML = para.text;
+
+  document.getElementById('story-text').appendChild(el);
+
+  const delay = settings.textSpeed === 'fast' ? 50 : settings.textSpeed === 'slow' ? 200 : 100;
+  setTimeout(() => {
+    el.classList.add('visible');
+    paragraphIndex++;
+    const nextDelay = settings.textSpeed === 'fast' ? 300 : settings.textSpeed === 'slow' ? 900 : 500;
+    displayTimer = setTimeout(displayNextParagraph, nextDelay);
+  }, delay);
+}
+
+function showChoices(choices) {
+  const container = document.getElementById('choices-container');
+  const list = document.getElementById('choices-list');
+  list.innerHTML = '';
+
+  choices.forEach((choice, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'choice-btn';
+    btn.innerHTML = `<span class="choice-key">${['A','B','C','D'][i]}.</span>${choice.text}`;
+    btn.onclick = () => makeChoice(choice);
+    list.appendChild(btn);
+  });
+
+  setTimeout(() => container.classList.add('visible'), 300);
+}
+
+function makeChoice(choice) {
+  // Play sound
+  playCreak();
+  getAudioCtx(); // ensure context started
+
+  // Apply stat changes
+  if (choice.health) updateStat('health', choice.health);
+  if (choice.sanity) updateStat('sanity', choice.sanity);
+
+  // Add journal entry
+  if (choice.journal) {
+    addJournalEntry(choice.journal.title, choice.journal.text);
+  }
+
+  // Record choice
+  gameState.choices[currentScene.id] = choice.next;
+
+  // Jumpscare?
+  if (choice.jumpscare && settings.jumpscares) {
+    triggerJumpscare(choice.jumpscare.icon, choice.jumpscare.delay, () => {
+      handleNavigation(choice);
+    });
+    return;
+  }
+
+  handleNavigation(choice);
+}
+
+function handleNavigation(choice) {
+  if (choice.next === '__GAMEOVER__') {
+    showGameOver(choice.endType);
+    return;
+  }
+
+  if (choice.next === '__END__') {
+    showEnding();
+    return;
+  }
+
+  if (choice.next === '__CHAPTER__') {
+    const nextChapter = choice.chapter;
+    CHAPTERS_DATA[nextChapter].unlocked = true;
+    gameState.choices['ch_' + nextChapter] = true;
+    gameState.choices['complete_ch_' + (nextChapter - 1)] = true;
+    startChapter(nextChapter);
+    return;
+  }
+
+  // Find scene in current chapter
+  const scene = gameState.currentChapterData.scenes.find(s => s.id === choice.next);
+  if (scene) {
+    // Scroll to top
+    document.querySelector('.story-container').scrollTop = 0;
+    window.scrollTo(0, 0);
+
+    // Clear and load
+    setTimeout(() => loadScene(scene), 200);
+  }
+}
+
+function updateStat(stat, delta) {
+  gameState[stat] = Math.max(0, Math.min(100, gameState[stat] + delta));
+  document.getElementById(stat + '-bar').style.width = gameState[stat] + '%';
+  document.getElementById(stat + '-num').textContent = gameState[stat];
+
+  if (delta < 0) {
+    // Flash effect
+    const flash = document.getElementById('red-flash');
+    flash.className = 'flash';
+    setTimeout(() => flash.className = '', 500);
+
+    if (settings.screenshake) {
+      document.getElementById('game-screen').classList.add('shake');
+      setTimeout(() => document.getElementById('game-screen').classList.remove('shake'), 500);
+    }
+
+    playHeartbeat();
+  }
+
+  // Death check
+  if (gameState.health <= 0) showGameOver('dead');
+  if (gameState.sanity <= 0) showGameOver('insane');
+}
+
+function triggerJumpscare(icon, delay, callback) {
+  setTimeout(() => {
+    if (!settings.jumpscares) { if (callback) callback(); return; }
+    const el = document.getElementById('jumpscare');
+    document.getElementById('jumpscare-icon').textContent = icon;
+    el.classList.add('active');
+    playJumpscareSFX();
+
+    if (settings.screenshake) {
+      document.getElementById('game-screen').classList.add('shake');
+    }
+
+    setTimeout(() => {
+      el.classList.remove('active');
+      document.getElementById('game-screen').classList.remove('shake');
+      if (callback) callback();
+    }, 600);
+  }, delay || 0);
+}
+
+function addJournalEntry(title, text) {
+  gameState.journal.push({ title, text });
+  const count = gameState.journal.length;
+  document.getElementById('journal-count').textContent = count + ' note' + (count !== 1 ? 's' : '') + ' collected';
+  playTone(440, 'sine', 0.3, 0.1);
+}
+
+function openJournal() {
+  const list = document.getElementById('journal-entries-list');
+  if (gameState.journal.length === 0) {
+    list.innerHTML = '<div style="color:rgba(160,152,144,0.3); font-style:italic; font-size:0.85rem;">No entries yet.</div>';
+  } else {
+    list.innerHTML = gameState.journal.map(e => `
+      <div class="journal-entry">
+        <div class="entry-title">📌 ${e.title}</div>
+        <div>${e.text}</div>
+      </div>
+    `).join('');
+  }
+  document.getElementById('journal-overlay').classList.add('active');
+}
+
+function closeJournal() {
+  document.getElementById('journal-overlay').classList.remove('active');
+}
+
+function showGameOver(type) {
+  stopAmbient();
+  const titles = {
+    dead: 'YOU PERISHED',
+    insane: 'YOUR MIND SHATTERED',
+    hollow: 'YOU WERE TAKEN',
+  };
+  const texts = {
+    dead: 'The darkness found you in the end. Every light eventually goes out.',
+    insane: 'The things you saw unmade you from the inside. You are still in Hollow Creek. You always will be.',
+    hollow: 'You looked too long. The light showed you everything. And you decided you preferred it to the world outside. No one came looking for you.',
+  };
+  const icons = { dead: '💀', insane: '🌀', hollow: '👁' };
+
+  document.getElementById('gameover-icon').textContent = icons[type] || '💀';
+  document.getElementById('gameover-title').textContent = titles[type] || 'GAME OVER';
+  document.getElementById('gameover-text').textContent = texts[type] || '';
+  showScreen('gameover-screen');
+  playTone(80, 'sawtooth', 2, 0.2);
+}
+
+function showEnding() {
+  stopAmbient();
+  gameState.choices['complete_ch_4'] = true;
+  document.getElementById('gameover-icon').textContent = '🕯';
+  document.getElementById('gameover-title').textContent = 'STORY COMPLETE';
+  document.getElementById('gameover-text').textContent =
+    'You survived Hollow Creek.\n\nFinal Sanity: ' + gameState.sanity +
+    ' | Final Health: ' + gameState.health +
+    ' | Notes collected: ' + gameState.journal.length;
+  document.getElementById('retry-btn').style.display = 'none';
+  showScreen('gameover-screen');
+  playTone(220, 'sine', 3, 0.15);
+}
+
+function retryChapter() {
+  document.getElementById('retry-btn').style.display = '';
+  gameState.health = 100;
+  gameState.sanity = 100;
+  document.getElementById('health-bar').style.width = '100%';
+  document.getElementById('health-num').textContent = '100';
+  document.getElementById('sanity-bar').style.width = '100%';
+  document.getElementById('sanity-num').textContent = '100';
+  startChapter(currentRetryChapter);
+}
+
+// Keyboard shortcuts for choices
+document.addEventListener('keydown', (e) => {
+  const keys = { 'a': 0, 'b': 1, 'c': 2, 'd': 3, '1': 0, '2': 1, '3': 2, '4': 3 };
+  const idx = keys[e.key.toLowerCase()];
+  if (idx !== undefined) {
+    const btns = document.querySelectorAll('.choice-btn');
+    if (btns[idx]) btns[idx].click();
+  }
+});
+
+// Click to skip paragraph animation
+document.getElementById('story-text').addEventListener('click', () => {
+  if (displayTimer) {
+    clearTimeout(displayTimer);
+    // Show all remaining paragraphs at once
+    while (paragraphIndex < paragraphQueue.length) {
+      const para = paragraphQueue[paragraphIndex];
+      const el = document.createElement('p');
+      el.className = 'story-paragraph ' + (para.type || 'normal') + ' visible';
+      el.innerHTML = para.text;
+      document.getElementById('story-text').appendChild(el);
+      paragraphIndex++;
+    }
+    showChoices(currentScene.choices);
+  }
+});
+
+// Init
+window.onload = () => {
+  CHAPTERS_DATA[0].unlocked = true;
+};
+</script>
+</body>
+</html>
